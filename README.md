@@ -104,9 +104,13 @@ ever deleted:
 
 | Object  | Name                            |
 | ------- | ------------------------------- |
-| Project | `QA <runId> <TC-id>`            |
+| Project | `QA [<test title>] [<runId>]`   |
 | Task    | `[<runId>][<TC-id>] <scenario>` |
 | Label   | `qa-<runId>-<suffix>`           |
+
+The run id is `<ISO 8601 UTC, whole seconds>-<4 hex>`, for example
+`2026-09-18T11:27:03Z-9fdd`. The timestamp dates an orphan, the hex keeps two runs
+started in the same second apart.
 
 `runId` is `<unix timestamp>-<4 hex characters>`, so leftovers can be dated.
 
