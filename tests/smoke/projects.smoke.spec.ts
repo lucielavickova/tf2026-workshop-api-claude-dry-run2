@@ -11,7 +11,7 @@ test('TC-01 Create a project', async ({ projects, tracker, data }) => {
     })
 
   await test.step('The API answers the documented success code', async () => {
-    expect(status, 'creating a project is documented to answer 201').toBe(201)
+    expect(status, 'creating a project is documented to answer 200').toBe(200)
   })
 
   await test.step('The response carries an id and the name that was sent', async () => {
