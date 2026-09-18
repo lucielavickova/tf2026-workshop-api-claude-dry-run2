@@ -1,4 +1,9 @@
 # Code owners approve every pull request. This is the mechanism that keeps merging
 # a human decision: an agent working under a separate identity is not listed here,
 # so it cannot approve, and GitHub never lets anyone approve their own pull request.
-* @lucielavickova
+#
+# Both humans are listed on purpose. With a single code owner, that owner's own pull
+# requests would be unmergeable: the "require code owner review" rule on main has an
+# empty bypass list, and nobody can approve their own pull request. Two owners mean a
+# pull request opened by one is always approvable by the other.
+* @lucielavickova @Anavini
