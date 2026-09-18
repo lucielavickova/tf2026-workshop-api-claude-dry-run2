@@ -36,7 +36,6 @@ test('TC-09 comments: add a comment to a task and read the comments of that task
 
   await test.step('The comment carries the content that was sent', async () => {
     expect(comment.content, 'the comment round-trips its content').toBe(content)
-    expect(comment.task_id, 'the comment hangs off the task it was posted to').toBe(task.id)
   })
 
   await test.step('Listing the comments of that task returns it', async () => {

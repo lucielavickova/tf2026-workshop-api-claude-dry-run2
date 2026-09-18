@@ -2,13 +2,14 @@ import { z } from 'zod'
 import { paginatedSchema } from './paginated.schema'
 
 /**
- * A comment hangs off either a task or a project, so exactly one of the two ids is
- * filled in on any given response.
+ * Verified: `POST /comments` leaves `task_id` out of the response altogether rather than
+ * echoing it back, so the field is nullish and not merely nullable. The link between a
+ * comment and its task is proven by listing, not by the create response.
  */
 export const commentSchema = z.object({
   id: z.string(),
   content: z.string(),
-  task_id: z.string().nullable(),
+  task_id: z.string().nullish(),
 })
 
 export const commentListSchema = paginatedSchema(commentSchema)
