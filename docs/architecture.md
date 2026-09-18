@@ -157,7 +157,7 @@ Four levels, each catching what slipped past the one above.
    goes after its contents. Runs after a failure and after a timeout. A cleanup error
    **never fails the test**; it becomes an attached warning. A test that failed on an
    assertion must not be repainted as "cleanup failed".
-2. **`globalTeardown`.** Deletes projects named `QA <runId> ...`.
+2. **`globalTeardown`.** Deletes projects named `QA [...] [<runId>]`.
 3. **Orphan sweep in `globalSetup`,** before anything is created. Prefixed projects older
    than **two hours** are deleted. Not 24 hours: smoke runs hourly and five project slots
    leave no room for day-old rubbish. A project that carries the prefix but whose run id

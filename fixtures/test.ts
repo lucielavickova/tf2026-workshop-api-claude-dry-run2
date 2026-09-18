@@ -98,8 +98,8 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     await use(new TasksApi(api))
   },
 
-  data: async ({ run, testId }, use) => {
-    const context = { runId: run.runId, testId: () => testId }
+  data: async ({ run, testId }, use, testInfo) => {
+    const context = { runId: run.runId, testId: () => testId, testTitle: () => testInfo.title }
     await use({
       project: projectFactory(context),
       task: taskFactory(context),
