@@ -44,6 +44,17 @@ export class TasksApi extends BaseApi {
     })
   }
 
+  /**
+   * The task as the list endpoint reports it, or null when the list does not hold it.
+   * Reads page by page and stops at the one that holds the id, so proving presence
+   * does not cost a walk of the whole account.
+   */
+  async findInList(id: string, query: ListTasksQuery = {}): Promise<Task | null> {
+    return this.findAcrossPages('/tasks', taskSchema, 'task', (task) => task.id === id, {
+      query: { project_id: query.projectId },
+    })
+  }
+
   async getRaw(id: string): Promise<RawResponse> {
     return this.client.raw('GET', `/tasks/${id}`)
   }

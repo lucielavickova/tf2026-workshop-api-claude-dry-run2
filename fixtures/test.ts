@@ -14,7 +14,7 @@ import type { CreateProjectInput } from '../src/api/resources/projects.api'
 import type { CreateTaskInput } from '../src/api/resources/tasks.api'
 
 export interface DataFactory {
-  project: (overrides?: Partial<CreateProjectInput>) => CreateProjectInput
+  project: (overrides?: Partial<CreateProjectInput> & { scenario?: string }) => CreateProjectInput
   task: (overrides?: Partial<CreateTaskInput> & { scenario?: string }) => CreateTaskInput
 }
 

@@ -18,12 +18,38 @@ export function createRunId(): string {
 /** The shape createRunId() produces. Anything else was not made by this suite. */
 export const RUN_ID_PATTERN = /^\d{10,}-[0-9a-f]{4}$/
 
-export function projectName(runId: string, testId: string): string {
-  return `${PROJECT_PREFIX}${runId} ${testId}`
+/** `2026-09-18 14:32` in the run timezone, for a human reading the account. */
+export function nameStamp(at: Date = new Date()): string {
+  const pad = (value: number): string => String(value).padStart(2, '0')
+
+  return (
+    `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())} ` +
+    `${pad(at.getHours())}:${pad(at.getMinutes())}`
+  )
 }
 
-export function taskContent(runId: string, testId: string, scenario: string): string {
-  return `[${runId}][${testId}] ${scenario}`
+/**
+ * `QA <runId> <testId> <scenario> <stamp>`. The prefix and the run id are what cleanup
+ * recognises; everything after them is there so that a person looking at the account
+ * can tell what the project was for and when it appeared. The scenario is optional,
+ * and a test names it only when one test holds more than one project.
+ */
+export function projectName(runId: string, testId: string, scenario = 'project for tasks'): string {
+  return `${PROJECT_PREFIX}${runId} ${testId} ${scenario} ${nameStamp()}`
+}
+
+/** `[<runId>][<testId>] <scenario> <stamp>`, readable for the same reason. */
+export function taskContent(runId: string, testId: string, scenario = 'Task'): string {
+  return `[${runId}][${testId}] ${scenario} ${nameStamp()}`
+}
+
+/**
+ * The label every task of a run carries, so the whole run is one filter in Todoist.
+ * A label used on a task is not a personal label: it shows up under shared labels
+ * while the task lives and disappears with it, so it needs no cleanup of its own.
+ */
+export function runLabel(runId: string): string {
+  return `${LABEL_PREFIX}${runId}`
 }
 
 export function labelName(runId: string, suffix: string): string {

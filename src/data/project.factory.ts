@@ -11,8 +11,13 @@ export interface ProjectFactoryContext {
  * the scenario is about, so the test reads as a description, not as JSON assembly.
  */
 export function projectFactory(context: ProjectFactoryContext) {
-  return (overrides: Partial<CreateProjectInput> = {}): CreateProjectInput => ({
-    name: projectName(context.runId, context.testId()),
-    ...overrides,
-  })
+  return (
+    overrides: Partial<CreateProjectInput> & { scenario?: string } = {}
+  ): CreateProjectInput => {
+    const { scenario, ...rest } = overrides
+    return {
+      name: projectName(context.runId, context.testId(), scenario),
+      ...rest,
+    }
+  }
 }
