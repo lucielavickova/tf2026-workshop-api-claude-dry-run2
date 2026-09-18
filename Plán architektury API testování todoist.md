@@ -1,6 +1,6 @@
 # Architektura automatizovaných API testů - Todoist
 
-## Context
+## Východiska
 
 Repozitář `tf2026-workshop-api-claude` je prázdný, obsahuje jen dva zadávací dokumenty a nemá žádný commit. Cílem je postavit od nuly samostatné repo s automatizovanými API testy Todoistu, které slouží dvěma účelům současně:
 
@@ -768,9 +768,9 @@ tf2026-workshop-api-claude/
 
 ---
 
-## První kroky po schválení plánu
+## První kroky
 
-Uživatel rozhodl, že i dokument architektury jde do repa přes Issue → větev → PR. Pořadí:
+Bylo rozhodnuto, že i dokument architektury jde do repa přes Issue → větev → PR. Pořadí:
 
 1. **One-time setup repa** (bez toho nejde dodržet pravidlo 15.1 ani pro první PR): ruleset na `main`, GitHub Environments `production` a `staging`, secret, labely, CODEOWNERS, issue a PR templates, `CONTRIBUTING.md`, kostra README. Tenhle krok je vejce-slepice - dělá se jako první commit do prázdného main, protože branch protection nelze splnit dřív, než existuje.
 2. **Issue + PR s dokumentem architektury** - `docs/architecture.md` vznikne z tohoto plánu. První PR, který projde novým workflow a rovnou ho tím ověří.
@@ -785,7 +785,7 @@ Kroky 1 a 2 jsou předpokladem workshopu. Kroky 3 až 5 musí být hotové dří
 
 ---
 
-## Verification
+## Jak ověřit, že framework drží
 
 Po každé fázi musí platit (převzato z acceptance criteria Wave 0 v katalogu):
 
@@ -835,5 +835,10 @@ Po každé fázi musí platit (převzato z acceptance criteria Wave 0 v katalogu
 6. **Je servisní účet pro CI vyhrazený, nebo je to něčí reálný Todoist?** Pokud reálný, dopad případného úniku i dopad testovacích dat je úplně jiný.
 7. **Bude mít CI servisní účet Free, nebo placený plán?** Odpověď rozhoduje o stropu paralelizace.
 8. **Kdy bude k dispozici `temp/todoist-e2e.har`?** Blokuje Wave 3 a Wave 5.
-9. **Opravdu smoke 24x denně?** Na produkčním účtu to je 24 cyklů zakládání a mazání projektu denně navíc k regresi a PR běhům. Alternativa: každou hodinu 7:00-19:0
+9. **Opravdu smoke 24x denně?** Na produkčním účtu to je 24 cyklů zakládání a mazání projektu denně navíc k regresi a PR běhům. Alternativa: každou hodinu 7:00-19:00 v pracovní dny, tedy ~65 běhů týdně místo 168. Feedback loop zůstane hodinový tehdy, kdy ho někdo čte.
+10. **Draft PR bez live sady - souhlas?** Šetří kapacitu účtu, ale je to odchylka od doslovného "v každém PR po každém commitu".
+11. **Kdo dostane notifikaci při červené scheduled pipeline?** Dnes nikdo. Minimum: workflow, které při selhání založí nebo aktualizuje issue. Jinak hodinová smoke nikoho neinformuje.
+12. **Kdo schvaluje rozšíření katalogu,** když review ve Wave 5 najde něco, co si zaslouží test? Předpoklad: Lucie nebo Anastasiya, agent si ID nevymýšlí.
+13. **Existuje reálně testovací prostředí Todoistu?** Podle toho se rozhodne, jestli `environments.ts` obsahuje konkrétní URL, nebo jen čte proměnnou.
 
+Poznámka k rate limitům: s dvanácti účastníky běžícími suite proti **vlastním** účtům se nedokumentované limity násobí per uživatel, takže workshopový provoz je z tohohle pohledu bezpečnější než jeden sdílený účet. Tlak zůstává jen na servisním účtu v CI.
