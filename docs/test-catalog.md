@@ -41,7 +41,7 @@ Ceiling: one test per endpoint, status and rough shape. Not every field.
 | TC-01 | create a project                 | `tests/smoke/projects.smoke.spec.ts` | todo  |
 | TC-02 | list projects                    | `tests/smoke/projects.smoke.spec.ts` | todo  |
 | TC-03 | get, update and delete a project | `tests/smoke/projects.smoke.spec.ts` | todo  |
-| TC-04 | create a task in a project       | `tests/smoke/tasks.smoke.spec.ts`    | todo  |
+| TC-04 | create a task in a project       | `tests/smoke/tasks.smoke.spec.ts`    | done  |
 | TC-05 | list and filter tasks            | `tests/smoke/tasks.smoke.spec.ts`    | todo  |
 | TC-06 | complete and reopen a task       | `tests/smoke/tasks.smoke.spec.ts`    | todo  |
 | TC-07 | sections                         | `tests/smoke/sections.smoke.spec.ts` | todo  |
@@ -117,6 +117,7 @@ create new test cases from it on its own.
 ## Findings so far
 
 - [Wave 0: verified API behaviour](findings/wave-0-api-behaviour.md)
+- [Wave 1: verified task behaviour](findings/wave-1-task-behaviour.md)
 
 ## Candidates beyond the catalog
 
