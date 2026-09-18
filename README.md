@@ -224,3 +224,8 @@ The token does not expire, so a leak is permanent. The protections, in order:
 
 Every change goes through an issue, a branch off `main` and a pull request. Nobody
 commits to `main`, and the agent never merges. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+What the first three catalog cases taught us about writing the next one is a project
+skill for Claude Code at
+[.claude/skills/writing-todoist-smoke-tests/SKILL.md](.claude/skills/writing-todoist-smoke-tests/SKILL.md).
+It loads on its own after a clone; humans can read it as a checklist.
