@@ -43,6 +43,11 @@ export function labelName(runId: string, suffix: string): string {
   return `${LABEL_PREFIX}${runId}-${suffix}`
 }
 
+/** Sections die with their project, so this name is for traceability, not for cleanup. */
+export function sectionName(runId: string, testId: string): string {
+  return `[${runId}][${testId}] section`
+}
+
 export interface ParsedProjectName {
   title: string
   runId: string
