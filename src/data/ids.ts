@@ -43,6 +43,11 @@ export function labelName(runId: string, suffix: string): string {
   return `${LABEL_PREFIX}${runId}-${suffix}`
 }
 
+/** Sections die with their project, so this name is for traceability, not for cleanup. */
+export function sectionName(runId: string, testId: string): string {
+  return `[${runId}][${testId}] section`
+}
+
 export interface ParsedProjectName {
   title: string
   runId: string
@@ -81,8 +86,21 @@ export function runIdAge(name: string, now: number = Date.now()): number | null 
   const parsed = parseProjectName(name)
   if (parsed === null) return null
 
-  const startedAt = Date.parse(parsed.runId.slice(0, -5))
-  if (!Number.isFinite(startedAt)) return null
+  return ageOfRunId(parsed.runId, now)
+}
 
-  return now - startedAt
+/**
+ * The same for a task, whose content starts `[<runId>]`. A task created without a project
+ * lives in the Inbox, which no project delete ever cascades into, so the sweep has to be
+ * able to date it on its own.
+ */
+export function taskRunIdAge(content: string, now: number = Date.now()): number | null {
+  const runId = content.match(TASK_PREFIX_PATTERN)?.[1]
+  return runId === undefined ? null : ageOfRunId(runId, now)
+}
+
+/** A run id ends in `-<4 hex>`; what precedes it is the ISO 8601 UTC timestamp. */
+function ageOfRunId(runId: string, now: number): number | null {
+  const startedAt = Date.parse(runId.slice(0, -5))
+  return Number.isFinite(startedAt) ? now - startedAt : null
 }
