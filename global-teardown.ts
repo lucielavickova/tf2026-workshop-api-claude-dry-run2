@@ -3,8 +3,9 @@ import type { APIRequestContext } from '@playwright/test'
 import { loadEnv } from './config/env'
 import { ApiClient } from './src/api/client'
 import { ProjectsApi } from './src/api/resources/projects.api'
+import { TasksApi } from './src/api/resources/tasks.api'
 import { runContext } from './src/support/run-context'
-import { PROJECT_PREFIX } from './src/data/ids'
+import { belongsToRun } from './src/data/ids'
 
 /**
  * The second line of defence after the per-test tracker: anything this run created
@@ -21,19 +22,19 @@ export default async function globalTeardown(): Promise<void> {
     const { runId } = runContext()
     context = await playwrightRequest.newContext()
 
-    const projects = new ProjectsApi(
-      new ApiClient({
-        request: context,
-        baseUrl: env.baseUrl,
-        token: env.token,
-        runId,
-        testId: () => 'SETUP',
-      })
-    )
+    const client = new ApiClient({
+      request: context,
+      baseUrl: env.baseUrl,
+      token: env.token,
+      runId,
+      testId: () => 'SETUP',
+    })
+    const projects = new ProjectsApi(client)
+    const tasks = new TasksApi(client)
 
-    const leftovers = (await projects.list()).filter((project) =>
-      project.name.startsWith(`${PROJECT_PREFIX}${runId} `)
-    )
+    const all = await projects.list()
+
+    const leftovers = all.filter((project) => belongsToRun(project.name, runId))
 
     for (const project of leftovers) {
       try {
@@ -45,6 +46,29 @@ export default async function globalTeardown(): Promise<void> {
 
     if (leftovers.length > 0) {
       console.log(`Teardown removed ${leftovers.length} leftover project(s) of run ${runId}`)
+    }
+
+    // Tasks created without a project live in the Inbox, which no project delete ever
+    // cascades into. Without this they would survive a cancelled run for good and count
+    // against the 300 task limit of the Free plan.
+    const inbox = all.find((project) => project.inbox_project === true)
+
+    if (inbox !== undefined) {
+      const strays = (await tasks.list({ projectId: inbox.id })).filter((task) =>
+        belongsToRun(task.content, runId)
+      )
+
+      for (const task of strays) {
+        try {
+          await tasks.delete(task.id)
+        } catch (error) {
+          console.warn(`Teardown could not delete task "${task.content}": ${describe(error)}`)
+        }
+      }
+
+      if (strays.length > 0) {
+        console.log(`Teardown removed ${strays.length} leftover Inbox task(s) of run ${runId}`)
+      }
     }
   } catch (error) {
     // Teardown must never turn a green run red - it reports and steps aside.

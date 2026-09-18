@@ -3,7 +3,7 @@ import type { CreateProjectInput } from '../api/resources/projects.api'
 
 export interface ProjectFactoryContext {
   runId: string
-  testId: () => string
+  testTitle: () => string
 }
 
 /**
@@ -12,7 +12,7 @@ export interface ProjectFactoryContext {
  */
 export function projectFactory(context: ProjectFactoryContext) {
   return (overrides: Partial<CreateProjectInput> = {}): CreateProjectInput => ({
-    name: projectName(context.runId, context.testId()),
+    name: projectName(context.runId, context.testTitle()),
     ...overrides,
   })
 }

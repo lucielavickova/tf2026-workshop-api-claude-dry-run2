@@ -1,5 +1,11 @@
 import { withAccount } from './account-client'
-import { belongsToRun, isManagedProjectName, runIdAge, RUN_ID_PATTERN } from '../src/data/ids'
+import {
+  belongsToRun,
+  isManagedProjectName,
+  runIdAge,
+  taskRunIdAge,
+  RUN_ID_PATTERN,
+} from '../src/data/ids'
 
 /**
  * Emergency cleanup of leftovers. Dry run by default - this may be pointed at
@@ -37,7 +43,7 @@ function readRunId(): string | undefined {
   if (raw === undefined) return undefined
 
   if (!RUN_ID_PATTERN.test(raw)) {
-    throw new Error(`--run-id must look like "<unix seconds>-<4 hex>", got "${raw}".`)
+    throw new Error(`--run-id must look like "<ISO 8601 UTC>-<4 hex>", got "${raw}".`)
   }
 
   return raw
@@ -48,10 +54,11 @@ async function main(): Promise<void> {
   const runId = readRunId()
   const minAgeMs = readMinAgeMs()
 
-  await withAccount(async ({ projects }) => {
+  await withAccount(async ({ projects, tasks }) => {
     const candidates: { id: string; name: string }[] = []
+    const all = await projects.list()
 
-    for (const project of await projects.list()) {
+    for (const project of all) {
       if (project.inbox_project === true) continue
       if (!isManagedProjectName(project.name)) continue
 
@@ -72,20 +79,51 @@ async function main(): Promise<void> {
       candidates.push({ id: project.id, name: project.name })
     }
 
+    // Tasks made without a project sit in the Inbox, which no project delete cascades
+    // into. They are the only leftovers a project sweep on its own can never reach.
+    const strays: { id: string; name: string }[] = []
+    const inbox = all.find((project) => project.inbox_project === true)
+
+    if (inbox !== undefined) {
+      for (const task of await tasks.list({ projectId: inbox.id })) {
+        if (runId !== undefined) {
+          if (belongsToRun(task.content, runId)) strays.push({ id: task.id, name: task.content })
+          continue
+        }
+
+        const age = taskRunIdAge(task.content)
+        if (age === null || age < minAgeMs) continue
+        strays.push({ id: task.id, name: task.content })
+      }
+    }
+
     const scope =
       runId === undefined ? `older than ${minAgeMs / 3_600_000}h` : `left by run ${runId}`
 
-    if (candidates.length === 0) {
+    if (candidates.length === 0 && strays.length === 0) {
       console.log(`Nothing to clean up (${scope}).`)
       return
     }
 
-    console.log(`${force ? 'Deleting' : 'Would delete'} ${candidates.length} project(s) ${scope}:`)
-    for (const candidate of candidates) console.log(`  - ${candidate.name}`)
+    const verb = force ? 'Deleting' : 'Would delete'
+
+    if (candidates.length > 0) {
+      console.log(`${verb} ${candidates.length} project(s) ${scope}:`)
+      for (const candidate of candidates) console.log(`  - ${candidate.name}`)
+    }
+
+    if (strays.length > 0) {
+      console.log(`${verb} ${strays.length} Inbox task(s) ${scope}:`)
+      for (const stray of strays) console.log(`  - ${stray.name}`)
+    }
 
     if (!force) {
       console.log('\nDry run. Re-run with --force to actually delete.')
       return
+    }
+
+    for (const stray of strays) {
+      await tasks.delete(stray.id)
     }
 
     for (const candidate of candidates) {

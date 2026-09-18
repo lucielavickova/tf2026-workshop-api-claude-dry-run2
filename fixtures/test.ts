@@ -5,17 +5,26 @@ import { ApiClient } from '../src/api/client'
 import { ProjectsApi } from '../src/api/resources/projects.api'
 import { TasksApi } from '../src/api/resources/tasks.api'
 import { UserApi } from '../src/api/resources/user.api'
+import { SectionsApi } from '../src/api/resources/sections.api'
+import { LabelsApi } from '../src/api/resources/labels.api'
+import { CommentsApi } from '../src/api/resources/comments.api'
 import { projectFactory } from '../src/data/project.factory'
 import { taskFactory } from '../src/data/task.factory'
+import { labelFactory } from '../src/data/label.factory'
+import { sectionFactory } from '../src/data/section.factory'
 import { ResourceTracker } from '../src/support/resource-tracker'
 import { runContext, type RunContext } from '../src/support/run-context'
 import type { Project } from '../src/schemas/project.schema'
 import type { CreateProjectInput } from '../src/api/resources/projects.api'
+import type { CreateSectionInput } from '../src/api/resources/sections.api'
+import type { CreateLabelInput } from '../src/api/resources/labels.api'
 import type { CreateTaskInput } from '../src/api/resources/tasks.api'
 
 export interface DataFactory {
   project: (overrides?: Partial<CreateProjectInput>) => CreateProjectInput
   task: (overrides?: Partial<CreateTaskInput> & { scenario?: string }) => CreateTaskInput
+  section: (overrides: Partial<CreateSectionInput> & { project_id: string }) => CreateSectionInput
+  label: (overrides?: Partial<CreateLabelInput> & { suffix?: string }) => CreateLabelInput
 }
 
 interface WorkerFixtures {
@@ -30,6 +39,9 @@ interface TestFixtures {
   user: UserApi
   projects: ProjectsApi
   tasks: TasksApi
+  sections: SectionsApi
+  labels: LabelsApi
+  comments: CommentsApi
   tracker: ResourceTracker
   data: DataFactory
   /** A project created lazily, only for tests that ask for it. */
@@ -98,16 +110,38 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     await use(new TasksApi(api))
   },
 
-  data: async ({ run, testId }, use) => {
-    const context = { runId: run.runId, testId: () => testId }
+  sections: async ({ api }, use) => {
+    await use(new SectionsApi(api))
+  },
+
+  labels: async ({ api }, use) => {
+    await use(new LabelsApi(api))
+  },
+
+  comments: async ({ api }, use) => {
+    await use(new CommentsApi(api))
+  },
+
+  data: async ({ run, testId }, use, testInfo) => {
+    const context = { runId: run.runId, testId: () => testId, testTitle: () => testInfo.title }
     await use({
       project: projectFactory(context),
       task: taskFactory(context),
+      section: sectionFactory(context),
+      label: labelFactory(context),
     })
   },
 
-  tracker: async ({ projects, tasks }, use, testInfo) => {
-    const tracker = new ResourceTracker({ projects, tasks })
+  tracker: async ({ projects, tasks, sections, labels, comments }, use, testInfo) => {
+    const tracker = new ResourceTracker({
+      projects,
+      tasks,
+      deleters: {
+        section: (id) => sections.delete(id),
+        label: (id) => labels.delete(id),
+        comment: (id) => comments.delete(id),
+      },
+    })
 
     await use(tracker)
 

@@ -104,14 +104,23 @@ ever deleted:
 
 | Object  | Name                            |
 | ------- | ------------------------------- |
-| Project | `QA <runId> <TC-id>`            |
+| Project | `QA [<test title>] [<runId>]`   |
 | Task    | `[<runId>][<TC-id>] <scenario>` |
 | Label   | `qa-<runId>-<suffix>`           |
 
-`runId` is `<unix timestamp>-<4 hex characters>`, so leftovers can be dated.
+The run id is `<ISO 8601 UTC, whole seconds>-<4 hex>`, for example
+`2026-09-18T11:27:03Z-9fdd`. The timestamp dates an orphan, the hex keeps two runs
+started in the same second apart. Todoist keeps 255 characters of a project name and
+drops the rest silently, so a test title that does not fit is cut; the run id never is.
+
+Some tests create their task without a project, which puts it in your **Inbox**. Those
+tasks carry the same `[<runId>]` prefix and are cleaned up the same way, but note that
+deleting a task is a soft delete, while deleting a project is hard and takes its tasks
+with it.
 
 Cleanup runs at four levels: after each test, after the run, as a sweep of anything
 prefixed and older than two hours at the start of the next run, and as a manual script.
+Every level covers both projects named `QA ...` and Inbox tasks named `[<runId>]...`.
 
 **The Free plan allows 5 projects.** The suite needs two free slots per worker, which is
 why one worker is the default and two is the practical ceiling on Free. Check and clean:
