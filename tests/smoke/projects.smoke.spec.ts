@@ -61,3 +61,30 @@ test('TC-02 List projects', async ({ projects, workspace }) => {
     }
   })
 })
+
+test('TC-03 Get, update and delete a project', async ({ projects, tracker, data, workspace }) => {
+  await test.step('The project is readable by its id', async () => {
+    const fetched = await projects.get(workspace.id)
+    expect(fetched.id).toBe(workspace.id)
+    expect(fetched.name).toBe(workspace.name)
+  })
+
+  await test.step('Renaming the project changes the name a fresh read returns', async () => {
+    const renamed = data.project({ scenario: 'renamed' })
+    await projects.update(workspace.id, { name: renamed.name })
+
+    const fetched = await projects.get(workspace.id)
+    expect(fetched.name, 'the new name is what a fresh read returns').toBe(renamed.name)
+  })
+
+  await test.step('Deleting the project answers the documented status', async () => {
+    const deleted = await projects.deleteRaw(workspace.id)
+    expect(deleted.status, 'deleting a project is documented to answer 204').toBe(204)
+    tracker.forget('project', workspace.id)
+  })
+
+  await test.step('Reading the project after the delete answers 404', async () => {
+    const afterDelete = await projects.getRaw(workspace.id)
+    expect(afterDelete.status, 'a project delete is a hard delete').toBe(404)
+  })
+})

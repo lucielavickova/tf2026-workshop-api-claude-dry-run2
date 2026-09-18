@@ -5,7 +5,7 @@ import { ApiClient } from '../src/api/client'
 import { ProjectsApi } from '../src/api/resources/projects.api'
 import { TasksApi } from '../src/api/resources/tasks.api'
 import { UserApi } from '../src/api/resources/user.api'
-import { projectFactory } from '../src/data/project.factory'
+import { projectFactory, type ProjectOverrides } from '../src/data/project.factory'
 import { taskFactory } from '../src/data/task.factory'
 import { ResourceTracker } from '../src/support/resource-tracker'
 import { runContext, type RunContext } from '../src/support/run-context'
@@ -14,7 +14,7 @@ import type { CreateProjectInput } from '../src/api/resources/projects.api'
 import type { CreateTaskInput } from '../src/api/resources/tasks.api'
 
 export interface DataFactory {
-  project: (overrides?: Partial<CreateProjectInput>) => CreateProjectInput
+  project: (overrides?: ProjectOverrides) => CreateProjectInput
   task: (overrides?: Partial<CreateTaskInput> & { scenario?: string }) => CreateTaskInput
 }
 
