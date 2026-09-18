@@ -1,0 +1,29 @@
+name: Smoke (hourly)
+
+on:
+  schedule:
+    # Minute 25 rather than 0: GitHub delays scheduled events, and the top of the
+    # hour has the longest queue.
+    - cron: '25 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The shared resource is the account, not the pipeline. All unattended traffic is
+# serialised into one queue; nothing is cancelled, so every run reaches its teardown.
+concurrency:
+  group: todoist-account-scheduled
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    uses: ./.github/workflows/_run-suite.yml
+    with:
+      suite: smoke
+      environment: production
+      workers: '1'
+      # Shortest retention of all: 24 runs a day, nobody revisits old ones, and a
+      # shorter retention is a shorter exposure window if sanitization ever fails.
+      retention-days: '7'
+    secrets: inherit

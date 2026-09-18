@@ -1,0 +1,4 @@
+# Code owners approve every pull request. This is the mechanism that keeps merging
+# a human decision: an agent working under a separate identity is not listed here,
+# so it cannot approve, and GitHub never lets anyone approve their own pull request.
+* @lucielavickova

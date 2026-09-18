@@ -1,2 +1,15 @@
 .env
+.env.*
+!.env.example
 node_modules/
+
+# Playwright output
+playwright-report/
+test-results/
+blob-report/
+
+# HAR recordings hold cookies and auth headers - never commit them
+temp/
+
+.DS_Store
+*.log
