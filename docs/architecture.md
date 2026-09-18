@@ -129,10 +129,11 @@ parallelism" is not free, and the account limit caps it before anything in the c
   ages and states of clutter.
 - `src/data/ids.ts` is the single source of truth for naming. Every object carries a
   prefix, which does two jobs: isolation between concurrent runs, and a **safety catch
-  for cleanup**, because nothing without a prefix is ever deleted. What follows the
-  prefix is written for a person looking at the account: the case id, what the object
-  was for, and a `YYYY-MM-DD HH:mm` stamp. Every task also carries the label
-  `qa-<runId>`, so one filter in the Todoist UI shows a whole run.
+  for cleanup**, because nothing without a prefix is ever deleted. Every task also
+  carries the label `qa-<runId>`, so one filter in the Todoist UI shows a whole run.
+  A test that holds more than one project passes a `scenario`, which extends the test
+  title inside the name rather than changing the format, so `parseProjectName()` and
+  every cleanup path keep working.
 - The `data` factory builds a valid payload with sensible defaults; a test overrides only
   the field its scenario is about, so the test reads as a description of the scenario
   rather than as JSON assembly.
@@ -160,7 +161,7 @@ Four levels, each catching what slipped past the one above.
    goes after its contents. Runs after a failure and after a timeout. A cleanup error
    **never fails the test**; it becomes an attached warning. A test that failed on an
    assertion must not be repainted as "cleanup failed".
-2. **`globalTeardown`.** Deletes projects named `QA <runId> ...`.
+2. **`globalTeardown`.** Deletes projects named `QA [...] [<runId>]`.
 3. **Orphan sweep in `globalSetup`,** before anything is created. Prefixed projects older
    than **two hours** are deleted. Not 24 hours: smoke runs hourly and five project slots
    leave no room for day-old rubbish. A project that carries the prefix but whose run id

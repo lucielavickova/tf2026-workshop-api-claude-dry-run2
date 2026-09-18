@@ -37,7 +37,7 @@ function readRunId(): string | undefined {
   if (raw === undefined) return undefined
 
   if (!RUN_ID_PATTERN.test(raw)) {
-    throw new Error(`--run-id must look like "<unix seconds>-<4 hex>", got "${raw}".`)
+    throw new Error(`--run-id must look like "<ISO 8601 UTC>-<4 hex>", got "${raw}".`)
   }
 
   return raw

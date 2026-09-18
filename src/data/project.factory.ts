@@ -3,7 +3,7 @@ import type { CreateProjectInput } from '../api/resources/projects.api'
 
 export interface ProjectFactoryContext {
   runId: string
-  testId: () => string
+  testTitle: () => string
 }
 
 /**
@@ -15,8 +15,15 @@ export function projectFactory(context: ProjectFactoryContext) {
     overrides: Partial<CreateProjectInput> & { scenario?: string } = {}
   ): CreateProjectInput => {
     const { scenario, ...rest } = overrides
+
+    // One test may hold more than one project, and the test title alone would name
+    // them identically. The scenario extends the title rather than the format, so
+    // parseProjectName() and every cleanup path keep working unchanged.
+    const title =
+      scenario === undefined ? context.testTitle() : `${context.testTitle()} - ${scenario}`
+
     return {
-      name: projectName(context.runId, context.testId(), scenario),
+      name: projectName(context.runId, title),
       ...rest,
     }
   }

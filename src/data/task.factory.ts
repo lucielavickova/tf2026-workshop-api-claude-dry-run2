@@ -12,7 +12,7 @@ export interface TaskFactoryContext {
  */
 export function taskFactory(context: TaskFactoryContext) {
   return (overrides: Partial<CreateTaskInput> & { scenario?: string } = {}): CreateTaskInput => {
-    const { scenario, ...rest } = overrides
+    const { scenario = 'task', ...rest } = overrides
     return {
       content: taskContent(context.runId, context.testId(), scenario),
       labels: [runLabel(context.runId)],

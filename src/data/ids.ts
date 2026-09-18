@@ -7,40 +7,36 @@ import { randomBytes } from 'node:crypto'
  */
 
 export const PROJECT_PREFIX = 'QA '
-export const TASK_PREFIX_PATTERN = /^\[(\d+)-([0-9a-f]{4})\]/
+export const TASK_PREFIX_PATTERN = /^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z-[0-9a-f]{4})\]/
 export const LABEL_PREFIX = 'qa-'
 
-/** `<unix seconds>-<4 hex>`: the timestamp dates an orphan, the hex avoids collisions. */
+/** `<ISO 8601 UTC, whole seconds>-<4 hex>`: the timestamp dates an orphan, the hex avoids collisions. */
 export function createRunId(): string {
-  return `${Math.floor(Date.now() / 1000)}-${randomBytes(2).toString('hex')}`
+  const timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
+  return `${timestamp}-${randomBytes(2).toString('hex')}`
 }
 
 /** The shape createRunId() produces. Anything else was not made by this suite. */
-export const RUN_ID_PATTERN = /^\d{10,}-[0-9a-f]{4}$/
-
-/** `2026-09-18 14:32` in the run timezone, for a human reading the account. */
-export function nameStamp(at: Date = new Date()): string {
-  const pad = (value: number): string => String(value).padStart(2, '0')
-
-  return (
-    `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())} ` +
-    `${pad(at.getHours())}:${pad(at.getMinutes())}`
-  )
-}
+export const RUN_ID_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z-[0-9a-f]{4}$/
 
 /**
- * `QA <runId> <testId> <scenario> <stamp>`. The prefix and the run id are what cleanup
- * recognises; everything after them is there so that a person looking at the account
- * can tell what the project was for and when it appeared. The scenario is optional,
- * and a test names it only when one test holds more than one project.
+ * Todoist stores this many characters of a project name and drops the rest without
+ * an error (see docs/findings/wave-1-project-behaviour.md).
  */
-export function projectName(runId: string, testId: string, scenario = 'project for tasks'): string {
-  return `${PROJECT_PREFIX}${runId} ${testId} ${scenario} ${nameStamp()}`
+export const PROJECT_NAME_MAX_LENGTH = 255
+
+/**
+ * `QA [<test title>] [<run id>]`, so the report, the account and the trace read the same.
+ * A title that does not fit is cut, never the run id: a silently truncated name would
+ * lose the run id at its end and with it every cleanup path's way to recognise it.
+ */
+export function projectName(runId: string, testTitle: string): string {
+  const room = PROJECT_NAME_MAX_LENGTH - `${PROJECT_PREFIX}[] [${runId}]`.length
+  return `${PROJECT_PREFIX}[${testTitle.slice(0, room)}] [${runId}]`
 }
 
-/** `[<runId>][<testId>] <scenario> <stamp>`, readable for the same reason. */
-export function taskContent(runId: string, testId: string, scenario = 'Task'): string {
-  return `[${runId}][${testId}] ${scenario} ${nameStamp()}`
+export function taskContent(runId: string, testId: string, scenario: string): string {
+  return `[${runId}][${testId}] ${scenario}`
 }
 
 /**
@@ -56,12 +52,34 @@ export function labelName(runId: string, suffix: string): string {
   return `${LABEL_PREFIX}${runId}-${suffix}`
 }
 
+export interface ParsedProjectName {
+  title: string
+  runId: string
+}
+
+const PROJECT_NAME_PATTERN = /^QA \[(.+)\] \[([^\]]+)\]$/
+
+/**
+ * Reads the parts back out of a name the suite built. Null for anything else,
+ * including names in a format the suite no longer produces: those still carry the
+ * prefix, so they are reported by the sweeps, but they are never deleted by them.
+ */
+export function parseProjectName(name: string): ParsedProjectName | null {
+  const match = name.match(PROJECT_NAME_PATTERN)
+  if (match === null) return null
+
+  const [, title, runId] = match
+  if (title === undefined || runId === undefined || !RUN_ID_PATTERN.test(runId)) return null
+
+  return { title, runId }
+}
+
 export function isManagedProjectName(name: string): boolean {
   return name.startsWith(PROJECT_PREFIX)
 }
 
 export function belongsToRun(name: string, runId: string): boolean {
-  return name.startsWith(`${PROJECT_PREFIX}${runId} `) || name.startsWith(`[${runId}]`)
+  return parseProjectName(name)?.runId === runId || name.startsWith(`[${runId}]`)
 }
 
 /**
@@ -69,13 +87,11 @@ export function belongsToRun(name: string, runId: string): boolean {
  * Unreadable means "a human may have made this" - the sweeper only warns, never deletes.
  */
 export function runIdAge(name: string, now: number = Date.now()): number | null {
-  if (!isManagedProjectName(name)) return null
+  const parsed = parseProjectName(name)
+  if (parsed === null) return null
 
-  const match = name.slice(PROJECT_PREFIX.length).match(/^(\d{10,})-([0-9a-f]{4})\s/)
-  if (match === null) return null
+  const startedAt = Date.parse(parsed.runId.slice(0, -5))
+  if (!Number.isFinite(startedAt)) return null
 
-  const seconds = Number(match[1])
-  if (!Number.isFinite(seconds)) return null
-
-  return now - seconds * 1000
+  return now - startedAt
 }
