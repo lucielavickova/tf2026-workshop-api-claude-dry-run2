@@ -19,9 +19,20 @@ export function createRunId(): string {
 /** The shape createRunId() produces. Anything else was not made by this suite. */
 export const RUN_ID_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z-[0-9a-f]{4}$/
 
-/** `QA [<test title>] [<run id>]`, so the report, the account and the trace read the same. */
+/**
+ * Todoist stores this many characters of a project name and drops the rest without
+ * an error (see docs/findings/wave-1-project-behaviour.md).
+ */
+export const PROJECT_NAME_MAX_LENGTH = 255
+
+/**
+ * `QA [<test title>] [<run id>]`, so the report, the account and the trace read the same.
+ * A title that does not fit is cut, never the run id: a silently truncated name would
+ * lose the run id at its end and with it every cleanup path's way to recognise it.
+ */
 export function projectName(runId: string, testTitle: string): string {
-  return `${PROJECT_PREFIX}[${testTitle}] [${runId}]`
+  const room = PROJECT_NAME_MAX_LENGTH - `${PROJECT_PREFIX}[] [${runId}]`.length
+  return `${PROJECT_PREFIX}[${testTitle.slice(0, room)}] [${runId}]`
 }
 
 export function taskContent(runId: string, testId: string, scenario: string): string {
