@@ -38,7 +38,7 @@ Ceiling: one test per endpoint, status and rough shape. Not every field.
 
 | Id    | Name                             | File                                 | State |
 | ----- | -------------------------------- | ------------------------------------ | ----- |
-| TC-01 | create a project                 | `tests/smoke/projects.smoke.spec.ts` | todo  |
+| TC-01 | create a project                 | `tests/smoke/projects.smoke.spec.ts` | done  |
 | TC-02 | list projects                    | `tests/smoke/projects.smoke.spec.ts` | done  |
 | TC-03 | get, update and delete a project | `tests/smoke/projects.smoke.spec.ts` | todo  |
 | TC-04 | create a task in a project       | `tests/smoke/tasks.smoke.spec.ts`    | done  |

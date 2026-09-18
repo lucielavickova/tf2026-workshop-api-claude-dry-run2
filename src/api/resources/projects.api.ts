@@ -15,10 +15,26 @@ export interface UpdateProjectInput {
   is_favorite?: boolean
 }
 
+export interface Created<T> {
+  status: number
+  resource: T
+}
+
 export class ProjectsApi extends BaseApi {
   async create(input: CreateProjectInput): Promise<Project> {
+    return (await this.createWithStatus(input)).resource
+  }
+
+  /**
+   * Keeps the status next to the parsed body. The smoke test asserts the documented
+   * success code; setup code uses create() and lets the client reject anything non-2xx.
+   */
+  async createWithStatus(input: CreateProjectInput): Promise<Created<Project>> {
     const response = await this.client.send('POST', '/projects', { body: input })
-    return this.parse(projectSchema, response.body, 'project')
+    return {
+      status: response.status,
+      resource: this.parse(projectSchema, response.body, 'project'),
+    }
   }
 
   async get(id: string): Promise<Project> {
