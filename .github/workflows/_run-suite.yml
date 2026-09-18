@@ -56,7 +56,7 @@ jobs:
       - name: Generate the run id
         # Generated before the suite starts, not inside it, so the cleanup step knows
         # what to remove even when the run is cancelled before its own teardown.
-        run: echo "TEST_RUN_ID=$(date +%s)-$(openssl rand -hex 2)" >> "$GITHUB_ENV"
+        run: echo "TEST_RUN_ID=$(date -u +%Y-%m-%dT%H:%M:%SZ)-$(openssl rand -hex 2)" >> "$GITHUB_ENV"
 
       # No `npx playwright install`: these are API tests, the request fixture needs
       # no browser. Saves about 40 seconds and 300 MB per run.

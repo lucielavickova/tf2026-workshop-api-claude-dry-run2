@@ -22,8 +22,8 @@ export function initRunContext(): RunContext {
     if (!RUN_ID_PATTERN.test(provided)) {
       throw new Error(
         `${RUN_ID_VARIABLE} is set to "${provided}", which is not a run id. Expected ` +
-          '"<unix seconds>-<4 hex>", for example 1760000000-a1b2. Unset it and the run ' +
-          'generates its own.'
+          '"<ISO 8601 UTC>-<4 hex>", for example 2026-09-18T11:27:03Z-a1b2. Unset it and ' +
+          'the run generates its own.'
       )
     }
     return { runId: provided, startedAt: Date.now() }

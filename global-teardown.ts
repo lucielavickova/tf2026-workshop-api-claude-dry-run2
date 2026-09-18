@@ -4,7 +4,7 @@ import { loadEnv } from './config/env'
 import { ApiClient } from './src/api/client'
 import { ProjectsApi } from './src/api/resources/projects.api'
 import { runContext } from './src/support/run-context'
-import { PROJECT_PREFIX } from './src/data/ids'
+import { belongsToRun } from './src/data/ids'
 
 /**
  * The second line of defence after the per-test tracker: anything this run created
@@ -31,9 +31,7 @@ export default async function globalTeardown(): Promise<void> {
       })
     )
 
-    const leftovers = (await projects.list()).filter((project) =>
-      project.name.startsWith(`${PROJECT_PREFIX}${runId} `)
-    )
+    const leftovers = (await projects.list()).filter((project) => belongsToRun(project.name, runId))
 
     for (const project of leftovers) {
       try {
