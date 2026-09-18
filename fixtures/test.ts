@@ -8,7 +8,7 @@ import { UserApi } from '../src/api/resources/user.api'
 import { SectionsApi } from '../src/api/resources/sections.api'
 import { LabelsApi } from '../src/api/resources/labels.api'
 import { CommentsApi } from '../src/api/resources/comments.api'
-import { projectFactory } from '../src/data/project.factory'
+import { projectFactory, type ProjectOverrides } from '../src/data/project.factory'
 import { taskFactory } from '../src/data/task.factory'
 import { labelFactory } from '../src/data/label.factory'
 import { sectionFactory } from '../src/data/section.factory'
@@ -21,7 +21,7 @@ import type { CreateLabelInput } from '../src/api/resources/labels.api'
 import type { CreateTaskInput } from '../src/api/resources/tasks.api'
 
 export interface DataFactory {
-  project: (overrides?: Partial<CreateProjectInput>) => CreateProjectInput
+  project: (overrides?: ProjectOverrides) => CreateProjectInput
   task: (overrides?: Partial<CreateTaskInput> & { scenario?: string }) => CreateTaskInput
   section: (overrides: Partial<CreateSectionInput> & { project_id: string }) => CreateSectionInput
   label: (overrides?: Partial<CreateLabelInput> & { suffix?: string }) => CreateLabelInput
