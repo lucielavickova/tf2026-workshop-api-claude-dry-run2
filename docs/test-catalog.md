@@ -118,6 +118,7 @@ create new test cases from it on its own.
 
 - [Wave 0: verified API behaviour](findings/wave-0-api-behaviour.md)
 - [Wave 1: verified task behaviour](findings/wave-1-task-behaviour.md)
+- [Wave 1: verified project behaviour](findings/wave-1-project-behaviour.md)
 
 ## Candidates beyond the catalog
 

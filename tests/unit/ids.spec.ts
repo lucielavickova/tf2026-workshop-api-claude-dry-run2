@@ -4,6 +4,7 @@ import {
   createRunId,
   isManagedProjectName,
   parseProjectName,
+  PROJECT_NAME_MAX_LENGTH,
   projectName,
   RUN_ID_PATTERN,
   runIdAge,
@@ -31,6 +32,19 @@ test.describe('project naming', () => {
     expect(projectName(runId, title)).toBe(
       'QA [TC-01 Create a project] [2026-09-18T11:27:03Z-9fdd]'
     )
+  })
+
+  test('a title too long for the name is cut, the run id never is', () => {
+    const longTitle = 'TC-99 ' + 'x'.repeat(400)
+    const name = projectName(runId, longTitle)
+
+    expect(name).toHaveLength(PROJECT_NAME_MAX_LENGTH)
+    expect(name.endsWith(`] [${runId}]`), 'the run id survives at the end').toBe(true)
+    expect(parseProjectName(name)?.runId).toBe(runId)
+  })
+
+  test('a title that fits is kept whole', () => {
+    expect(parseProjectName(projectName(runId, title))?.title).toBe(title)
   })
 
   test('a built name parses back into its parts', () => {
