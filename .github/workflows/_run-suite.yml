@@ -1,0 +1,115 @@
+name: Run suite
+
+# The whole live run lives here exactly once: run, clean up, sanitize, verify,
+# upload, summarise. Triggers are thin wrappers, so no variant can skip a security
+# step by accident.
+
+on:
+  workflow_call:
+    inputs:
+      suite:
+        description: Playwright project to run, or "all"
+        type: string
+        default: all
+      environment:
+        description: GitHub Environment holding the token and base URL
+        type: string
+        default: production
+      workers:
+        description: Number of Playwright workers
+        type: string
+        default: '1'
+      retention-days:
+        type: string
+        default: '14'
+
+# A job that touches the token and the traces never gets more than it needs.
+permissions:
+  contents: read
+
+jobs:
+  run:
+    name: ${{ inputs.suite }} on ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 30
+    env:
+      # TZ must be set before the Node process starts, so it belongs at job level.
+      TZ: Europe/Prague
+      TODOIST_API_TOKEN: ${{ secrets.TODOIST_API_TOKEN }}
+      TODOIST_BASE_URL: ${{ vars.TODOIST_BASE_URL }}
+      TEST_WORKERS: ${{ inputs.workers }}
+      SUITE: ${{ inputs.suite }}
+      ENVIRONMENT: ${{ inputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate the run id
+        # Generated before the suite starts, not inside it, so the cleanup step knows
+        # what to remove even when the run is cancelled before its own teardown.
+        run: echo "TEST_RUN_ID=$(date +%s)-$(openssl rand -hex 2)" >> "$GITHUB_ENV"
+
+      # No `npx playwright install`: these are API tests, the request fixture needs
+      # no browser. Saves about 40 seconds and 300 MB per run.
+
+      - name: Check account capacity
+        run: npm run account:preflight
+
+      - name: Run tests
+        id: tests
+        run: ${{ inputs.suite == 'all' && 'npm test' || format('npx playwright test --project={0}', inputs.suite) }}
+
+      - name: Clean up leftover account data
+        if: always()
+        # Scoped to this run, because the script's default age filter is two hours and
+        # an unscoped call could therefore never remove anything the run that has just
+        # finished left behind.
+        run: npm run account:cleanup -- --force --run-id="$TEST_RUN_ID"
+
+      - name: Sanitize artifacts
+        if: always()
+        run: npm run artifacts:sanitize
+
+      - name: Verify no secrets in artifacts
+        id: verify
+        if: always()
+        run: npm run artifacts:verify
+
+      # Uploads are conditional on verification, never on the test result.
+      - name: Upload HTML report
+        if: always() && steps.verify.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ inputs.suite }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: playwright-report/
+          retention-days: ${{ inputs.retention-days }}
+
+      - name: Upload traces
+        if: always() && steps.verify.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: traces-${{ inputs.suite }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/**/trace.zip
+          retention-days: ${{ inputs.retention-days }}
+          # A zip inside a zip does not compress.
+          compression-level: 0
+          if-no-files-found: ignore
+
+      - name: Destroy artifacts that failed verification
+        if: always() && steps.verify.outcome == 'failure'
+        run: |
+          rm -rf playwright-report test-results blob-report
+          echo "::error::Secret verification failed. Artifacts were destroyed and nothing was uploaded."
+
+      - name: Job summary
+        if: always()
+        run: npm run ci:summary

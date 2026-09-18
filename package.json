@@ -1,0 +1,47 @@
+{
+  "name": "tf2026-workshop-api-claude",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Automated API tests for Todoist - Tesena Fest 2026 workshop",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "cross-env TZ=Europe/Prague playwright test",
+    "test:smoke": "cross-env TZ=Europe/Prague playwright test --project=smoke",
+    "test:regression": "cross-env TZ=Europe/Prague playwright test --project=regression",
+    "test:e2e": "cross-env TZ=Europe/Prague playwright test --project=e2e",
+    "test:negative": "cross-env TZ=Europe/Prague playwright test --project=negative",
+    "test:unit": "cross-env TZ=Europe/Prague playwright test --config=playwright.unit.config.ts",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:test-ids": "tsx scripts/check-test-ids.ts",
+    "account:preflight": "tsx scripts/account-preflight.ts",
+    "account:cleanup": "tsx scripts/account-cleanup.ts",
+    "artifacts:sanitize": "tsx scripts/sanitize-artifacts.ts",
+    "artifacts:verify": "tsx scripts/verify-no-secrets.ts",
+    "ci:summary": "tsx scripts/ci-summary.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^22.15.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.0",
+    "fflate": "^0.8.2",
+    "prettier": "^3.6.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.44.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "zod": "^4.1.0"
+  }
+}

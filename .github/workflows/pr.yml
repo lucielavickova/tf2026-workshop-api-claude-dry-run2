@@ -1,0 +1,89 @@
+name: Pull request
+
+on:
+  pull_request:
+    # synchronize = after every commit, which is what the assignment asks for.
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: Static checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run check:test-ids
+      # Needs no token, so it runs on fork pull requests too - exactly where a broken
+      # sanitizer would be most dangerous.
+      - run: npm run test:unit
+      - name: Resolve every test
+        run: npx playwright test --list
+        env:
+          TODOIST_API_TOKEN: '0000000000000000000000000000000000000000'
+          TODOIST_BASE_URL: https://app.todoist.com/api/v1
+
+  live:
+    name: Full suite
+    needs: static
+    # The full suite cannot run on a fork pull request without either handing out the
+    # token or running someone else's code with access to it. There is no third option;
+    # see CONTRIBUTING.md for how an outside contribution gets in.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/_run-suite.yml
+    with:
+      suite: all
+      environment: production
+      workers: '1'
+      retention-days: '14'
+    secrets: inherit
+    concurrency:
+      group: todoist-account-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+
+  gate:
+    name: PR gate
+    needs: [static, live]
+    # A skipped required check blocks a merge forever, and `live` skips on forks and
+    # drafts. The gate always runs, so there is always something to satisfy.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate results
+        run: |
+          static='${{ needs.static.result }}'
+          live='${{ needs.live.result }}'
+          echo "static=$static live=$live"
+
+          if [ "$static" != "success" ]; then
+            echo "::error::Static checks did not pass."
+            exit 1
+          fi
+
+          if [ "$live" = "success" ]; then
+            exit 0
+          fi
+
+          if [ "$live" = "skipped" ]; then
+            if [ '${{ github.event.pull_request.draft }}' = 'true' ]; then
+              echo "::error::This pull request is a draft, so the live suite did not run. Mark it ready for review."
+            else
+              echo "::error::The live suite does not run on pull requests from a fork. A maintainer must pull the branch into this repository and open an internal pull request. See CONTRIBUTING.md."
+            fi
+            exit 1
+          fi
+
+          echo "::error::The live suite did not pass (result: $live)."
+          exit 1

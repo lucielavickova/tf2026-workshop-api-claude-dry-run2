@@ -1,0 +1,63 @@
+name: Regression (daily 16:00 Europe/Prague)
+
+on:
+  schedule:
+    # GitHub Actions cron is always UTC and takes no timezone. 16:00 in Prague is
+    # 14:00 UTC in summer and 15:00 UTC in winter, so both are declared and a gate
+    # decides which one is the real one today.
+    - cron: '10 14 * * *' # 16:10 Prague during CEST (UTC+2)
+    - cron: '10 15 * * *' # 16:10 Prague during CET  (UTC+1)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: todoist-account-scheduled
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Daylight saving gate
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - id: decide
+        # Decides by which cron fired, not by the current hour. A schedule event
+        # delayed by tens of minutes therefore changes nothing.
+        env:
+          # The cron line that fired, as GitHub reports it. There is no
+          # GITHUB_EVENT_SCHEDULE variable in the runner environment, and reading one
+          # made the comparison fail every time, so the job never ran on schedule.
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          if [ '${{ github.event_name }}' != 'schedule' ]; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          offset=$(TZ=Europe/Prague date +%z)
+          case "$offset" in
+            +0200) want='10 14 * * *' ;;
+            +0100) want='10 15 * * *' ;;
+            *)     want='' ;;
+          esac
+
+          if [ "$EVENT_SCHEDULE" = "$want" ]; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping: offset $offset expects cron '$want', this run is '$EVENT_SCHEDULE'."
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+          fi
+
+  regression:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    uses: ./.github/workflows/_run-suite.yml
+    with:
+      suite: all
+      environment: production
+      workers: '1'
+      retention-days: '30'
+    secrets: inherit

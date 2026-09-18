@@ -1,0 +1,43 @@
+name: Clean up account
+
+# The janitor. A pull request run cancelled mid-flight never reaches its teardown
+# and leaves a project behind; this is what closes that gap.
+
+on:
+  schedule:
+    - cron: '40 3 * * *'
+  workflow_dispatch:
+    inputs:
+      min-age-hours:
+        description: Only delete prefixed projects older than this
+        type: string
+        default: '2'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: todoist-account-scheduled
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    env:
+      TZ: Europe/Prague
+      TODOIST_API_TOKEN: ${{ secrets.TODOIST_API_TOKEN }}
+      TODOIST_BASE_URL: ${{ vars.TODOIST_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Delete stale suite data
+        run: npm run account:cleanup -- --force --min-age-hours=${{ inputs.min-age-hours || '2' }}
+      - name: Report account state
+        if: always()
+        run: npm run account:preflight

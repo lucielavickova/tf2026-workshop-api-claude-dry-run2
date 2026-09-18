@@ -10,18 +10,19 @@ Repozitář `tf2026-workshop-api-claude` je prázdný, obsahuje jen dva zadávac
 Ta dvojí role určuje skoro každé rozhodnutí níže. Framework musí být dost jednoduchý, aby ho pár lidí pochopil za dopoledne, a dost robustní, aby snesl 24 běhů denně na reálném produkčním účtu.
 
 **Zdroje zadání v repu:**
+
 - [Zadání architektury API testování todoist.md](Zadání architektury API testování todoist.md) - 15 bodů, co má architektura obsahovat
 - [5 - test cases a scope.md](5%20-%20test%20cases%20a%20scope.md) - závazný katalog test casů TC-01 až TC-24, TC-09a a UC-E2E, rozdělený do vln 0-5, včetně pravidla, kde každá vlna končí
 
 **Rozhodnutí uživatele učiněná při plánování:**
 
-| Otázka | Rozhodnutí |
-|---|---|
-| ID testů | TC-01 až TC-24, TC-09a, UC-E2E z katalogu. Žádný externí TMS, žádná mapovací tabulka |
-| Viditelnost repa | **Veřejné.** Sanitizace artefaktů je proto v základním rozsahu, ne follow-up |
-| Účty | Každý účastník má vlastní Todoist účet a token lokálně v `.env`. Jeden sdílený servisní účet jen pro CI |
-| Dokument architektury | Jde do repa přes Issue → větev → PR, ne přímo do main |
-| `temp/todoist-e2e.har` | Uživatel ho má a dodá později. UC-E2E na něm závisí |
+| Otázka                 | Rozhodnutí                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| ID testů               | TC-01 až TC-24, TC-09a, UC-E2E z katalogu. Žádný externí TMS, žádná mapovací tabulka                    |
+| Viditelnost repa       | **Veřejné.** Sanitizace artefaktů je proto v základním rozsahu, ne follow-up                            |
+| Účty                   | Každý účastník má vlastní Todoist účet a token lokálně v `.env`. Jeden sdílený servisní účet jen pro CI |
+| Dokument architektury  | Jde do repa přes Issue → větev → PR, ne přímo do main                                                   |
+| `temp/todoist-e2e.har` | Uživatel ho má a dodá později. UC-E2E na něm závisí                                                     |
 
 ---
 
@@ -104,12 +105,12 @@ export const environments = {
 } as const
 ```
 
-| Proměnná | V CI | Lokálně | Default |
-|---|---|---|---|
-| `TODOIST_BASE_URL` | `vars.TODOIST_BASE_URL` z GitHub Environment | `.env` | `https://app.todoist.com/api/v1` |
-| `TODOIST_API_TOKEN` | `secrets.TODOIST_API_TOKEN` z Environment | `.env` | žádný, chybějící = fail fast |
-| `TEST_WORKERS` | input workflow | `.env` | `1` |
-| `TZ` | job-level env | `cross-env` v npm scriptu | `Europe/Prague` |
+| Proměnná            | V CI                                         | Lokálně                   | Default                          |
+| ------------------- | -------------------------------------------- | ------------------------- | -------------------------------- |
+| `TODOIST_BASE_URL`  | `vars.TODOIST_BASE_URL` z GitHub Environment | `.env`                    | `https://app.todoist.com/api/v1` |
+| `TODOIST_API_TOKEN` | `secrets.TODOIST_API_TOKEN` z Environment    | `.env`                    | žádný, chybějící = fail fast     |
+| `TEST_WORKERS`      | input workflow                               | `.env`                    | `1`                              |
+| `TZ`                | job-level env                                | `cross-env` v npm scriptu | `Europe/Prague`                  |
 
 `TZ` musí být nastavené **před startem Node procesu**, proto patří na úroveň jobu, ne do `.env`. Past, na kterou se dá snadno narazit, patří do README.
 
@@ -147,14 +148,14 @@ Pořadí regression → e2e → negative je dané pořadím deklarace a při 1 w
 
 ## Mapování katalogu na úrovně
 
-| Vlna katalogu | Playwright project | testDir | Test casy |
-|---|---|---|---|
-| Wave 0 foundation | žádný | - | infrastruktura, ne testy |
-| Wave 1 smoke | `smoke` | `tests/smoke/` | TC-01 až TC-09 |
-| Wave 2 features | `regression` | `tests/regression/` | TC-09a, TC-10 až TC-15 |
-| Wave 3 chains | `e2e` | `tests/e2e/` | UC-E2E, TC-16, TC-17, TC-18 |
-| Wave 4 negatives | `negative` | `tests/negative/` | TC-19 až TC-22 |
-| Wave 5 contract review | **žádný** | `docs/findings/` | TC-23, TC-24 |
+| Vlna katalogu          | Playwright project | testDir             | Test casy                   |
+| ---------------------- | ------------------ | ------------------- | --------------------------- |
+| Wave 0 foundation      | žádný              | -                   | infrastruktura, ne testy    |
+| Wave 1 smoke           | `smoke`            | `tests/smoke/`      | TC-01 až TC-09              |
+| Wave 2 features        | `regression`       | `tests/regression/` | TC-09a, TC-10 až TC-15      |
+| Wave 3 chains          | `e2e`              | `tests/e2e/`        | UC-E2E, TC-16, TC-17, TC-18 |
+| Wave 4 negatives       | `negative`         | `tests/negative/`   | TC-19 až TC-22              |
+| Wave 5 contract review | **žádný**          | `docs/findings/`    | TC-23, TC-24                |
 
 Wave 5 nejsou automatizované testy a nevznikne pro ně spec soubor. Jsou to review aktivity, jejichž výstupem je zapsaný finding a GitHub issue.
 
@@ -173,6 +174,7 @@ Strop vlny podle katalogu: jeden test na endpoint, status a hrubý tvar. Žádn�
 TC-01 až TC-03 v `projects.smoke.spec.ts`, TC-04 až TC-06 v `tasks.smoke.spec.ts`, TC-07 v `sections.smoke.spec.ts`, TC-08 v `labels.smoke.spec.ts`, TC-09 v `comments.smoke.spec.ts`.
 
 Body z acceptance criteria, které mají přímý dopad na implementaci:
+
 - **TC-02 a TC-05** mají explicitní zákaz předpokladů o obsahu účtu (hledat podle id, ne podle pozice, nepředpokládat krátký seznam). `list()` musí projít celou paginaci a žádná aserce nesmí být na délku seznamu. Na zaneřáděném osobním účtu je to rozdíl mezi zeleným a náhodně červeným testem.
 - **TC-03** asertuje 404 po smazání projektu. U tasků víme, že DELETE je soft, u projektů ne. Wave 0 to ověří a pokud realita říká něco jiného, **vyhrává realita** a rozdíl jde do issue jako finding.
 - **TC-04** má AC "deleting the parent project removes the task too (verify this assumption)". Proto si projekt vytváří sám a maže ho uvnitř testu, ne přes fixture `workspace`, aby měl kaskádu co ověřit.
@@ -182,17 +184,18 @@ Body z acceptance criteria, které mají přímý dopad na implementaci:
 
 Strop vlny: dvě až tři byznys pravidla, která by uživatel poznal. Ne každá kombinace parametrů.
 
-| TC | Soubor | Bloků |
-|---|---|---|
-| TC-09a required and optional fields | `tasks/required-and-optional-fields.spec.ts` | 4 + N polí |
-| TC-10 priority mapping | `tasks/priority.spec.ts` | 2 |
-| TC-11 due date as a string | `due-dates/due-string.spec.ts` | 2 |
-| TC-12 due date with explicit date and time | `due-dates/explicit-date-and-time.spec.ts` | 2 |
-| TC-13 recurring task after completion | `due-dates/recurring.spec.ts` | 1 |
-| TC-14 subtasks | `tasks/subtasks.spec.ts` | 3 |
-| TC-15 moving a task between projects | `tasks/move.spec.ts` | 1 |
+| TC                                         | Soubor                                       | Bloků      |
+| ------------------------------------------ | -------------------------------------------- | ---------- |
+| TC-09a required and optional fields        | `tasks/required-and-optional-fields.spec.ts` | 4 + N polí |
+| TC-10 priority mapping                     | `tasks/priority.spec.ts`                     | 2          |
+| TC-11 due date as a string                 | `due-dates/due-string.spec.ts`               | 2          |
+| TC-12 due date with explicit date and time | `due-dates/explicit-date-and-time.spec.ts`   | 2          |
+| TC-13 recurring task after completion      | `due-dates/recurring.spec.ts`                | 1          |
+| TC-14 subtasks                             | `tasks/subtasks.spec.ts`                     | 3          |
+| TC-15 moving a task between projects       | `tasks/move.spec.ts`                         | 1          |
 
 Rozpad TC-09a podle šesti odrážek katalogu:
+
 ```
 TC-09a.1 creating a task with only the required fields succeeds
 TC-09a.2 creating a task without "<field>" is rejected      ← cyklus nad REQUIRED_FIELDS
@@ -201,6 +204,7 @@ TC-09a.4 the default of an omitted optional field is asserted explicitly
 TC-09a.5 an unknown field is ignored or rejected, the test asserts which
 TC-09a.6 a field sent with the wrong type is rejected, not coerced
 ```
+
 `REQUIRED_FIELDS` je `as const` pole odvozené z aktuální dokumentace, ne z OpenAPI.
 
 **TC-14 je rozdělený na tři bloky** z konkrétního důvodu: TC-14.3 maže rodiče, takže by ostatním asercím sebral data. Tři atomické testy, každý si postaví vlastní dvojici.
@@ -209,12 +213,12 @@ TC-09a.6 a field sent with the wrong type is rejected, not coerced
 
 ### Wave 3 - chains (4 testy)
 
-| TC | Soubor | Bloků |
-|---|---|---|
-| UC-E2E the recorded journey | `recorded-journey.e2e.spec.ts` | **přesně 1** |
-| TC-16 a project from empty to done | `project-from-empty-to-done.e2e.spec.ts` | 1 |
-| TC-17 task lifecycle with comments and labels | `task-lifecycle.e2e.spec.ts` | 1 |
-| TC-18 bulk creation and consistency | `bulk-creation.e2e.spec.ts` | 1 |
+| TC                                            | Soubor                                   | Bloků        |
+| --------------------------------------------- | ---------------------------------------- | ------------ |
+| UC-E2E the recorded journey                   | `recorded-journey.e2e.spec.ts`           | **přesně 1** |
+| TC-16 a project from empty to done            | `project-from-empty-to-done.e2e.spec.ts` | 1            |
+| TC-17 task lifecycle with comments and labels | `task-lifecycle.e2e.spec.ts`             | 1            |
+| TC-18 bulk creation and consistency           | `bulk-creation.e2e.spec.ts`              | 1            |
 
 - **UC-E2E se dělá jako první položka Wave 3** a katalog u něj říká "Do not write any other test". Jeden `test()`, pět kroků, každý ověřený čerstvým čtením, aserce na status **jednotlivého commandu**, ne na HTTP status obálky.
 - **TC-18 má stejnou past s obálkou:** batch vrátí 200, zatímco command uvnitř selhal. Resource client proto vrací `sync_status` po commandech a test asertuje každý z nich. Katalog říká, že tohle je case na kontraktní diskusi - zelená suite, která skrývá rozbitou funkci.
@@ -238,14 +242,14 @@ TC-24 dodá `docs/findings/TC-24-missing-coverage.md` + issue: endpointy bez tes
 
 ### Objem
 
-| Vlna | TC | `test()` bloků |
-|---|---|---|
-| Wave 1 smoke | 9 | 9 |
-| Wave 2 features | 7 | ~13 + N |
-| Wave 3 chains | 4 | 4 |
-| Wave 4 negatives | 4 | 12 |
-| **automatizovaně celkem** | **24** | **~38 + N** |
-| Wave 5 review | 2 | 0 |
+| Vlna                      | TC     | `test()` bloků |
+| ------------------------- | ------ | -------------- |
+| Wave 1 smoke              | 9      | 9              |
+| Wave 2 features           | 7      | ~13 + N        |
+| Wave 3 chains             | 4      | 4              |
+| Wave 4 negatives          | 4      | 12             |
+| **automatizovaně celkem** | **24** | **~38 + N**    |
+| Wave 5 review             | 2      | 0              |
 
 Plný běh na jednom vlákně pod 10 minut, smoke pod 60 sekund. Jakmile plný běh přesáhne 15 minut, je čas na paralelizaci.
 
@@ -298,7 +302,7 @@ Test nemá `afterEach`. Úklid dělá teardown fixtury `tracker`, což platí i 
 - **Název testu:** `<TC-id> <věta v přítomném čase popisující výsledek pro uživatele>`. Dobře: `TC-06 complete and reopen a task`. Špatně: `TC-06 POST /tasks/{id}/close returns 204`
 - **Kroky:** přípravné mají prefix `Setup:`, aby bylo v reportu poznat, že nespadl produkt, ale příprava dat
 - **Proměnné:** `created`, `fetched`, `input`, `expected`. Žádné `res`, `data1`
-- **Komentáře:** jen tam, kde kód nevysvětluje *proč*. Typicky u ověřených odchylek od dokumentace. Nikdy komentář opakující název metody
+- **Komentáře:** jen tam, kde kód nevysvětluje _proč_. Typicky u ověřených odchylek od dokumentace. Nikdy komentář opakující název metody
 - **Bez logování:** žádný vlastní logger. Kroky, aserce a trace v HTML reportu jsou celá diagnostika (zadání 10.8)
 
 ### Kandidáti na rozšíření nad rámec katalogu
@@ -311,20 +315,20 @@ Nepíšou se teď, každý by potřeboval nové katalogové ID schválené Luci�
 
 Prefix `MT` je zvolený tak, aby se nepral s `TC` a `UC` z katalogu. Registr je `docs/manual-tests.md`. Zadání bod 5.5 to vyžaduje explicitně.
 
-| ID | Co | Proč ručně |
-|---|---|---|
-| MT-01 | Nastavení účtu a workspace (Settings) | Zadání 13.1: schéma API se bude měnit, automatizace by se zahodila |
-| MT-02 | Placené funkce: reminders s vlastním offsetem, pokročilé filtry, historie aktivit, zálohy | Testujeme jen Free. `user_plan_limits` hlásí `reminders: false`, API je odmítne |
-| MT-03 | Limity počtu tasků (300) a labelů (500) | Vytvoření 300 tasků je pomalé, spálí nedokumentovaný rate limit a zaneřádí účet. 1x za release |
-| MT-04 | Přílohy a upload (limit 5 MB) | Binární upload, mimo scope suite |
-| MT-05 | Doručení notifikace pro `reminders_at_due` | Doručení je za hranicí API, nedá se ověřit HTTP odpovědí |
-| MT-06 | Zobrazení termínu v aplikaci na zařízení v jiné timezone | Automat ověří jen API odpověď. Jestli appka zobrazí správný lokální den, je UI věc, a právě tam je největší riziko domény |
-| MT-07 | Quick add v aplikaci v češtině | Ověřeno: API parser je jen anglický. Jestli to appka řeší na klientovi, se přes API zjistit nedá |
-| MT-08 | Rotace a revokace API tokenu | Vyžaduje UI, API tokenem to nejde |
-| MT-09 | Sdílení projektu, pozvánky | Vyžaduje druhý účet a e-mail, mimo scope |
-| MT-10 | Chování pod zátěží a hranice rate limitu | Zadání 7.2 performance testy vylučuje |
-| MT-11 | Smazání účtu a exporty dat | Nevratné |
-| MT-12 | Explorativní session nad changelogem nové verze API | Lidský úsudek, plodí návrhy nových katalogových case |
+| ID    | Co                                                                                        | Proč ručně                                                                                                                |
+| ----- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| MT-01 | Nastavení účtu a workspace (Settings)                                                     | Zadání 13.1: schéma API se bude měnit, automatizace by se zahodila                                                        |
+| MT-02 | Placené funkce: reminders s vlastním offsetem, pokročilé filtry, historie aktivit, zálohy | Testujeme jen Free. `user_plan_limits` hlásí `reminders: false`, API je odmítne                                           |
+| MT-03 | Limity počtu tasků (300) a labelů (500)                                                   | Vytvoření 300 tasků je pomalé, spálí nedokumentovaný rate limit a zaneřádí účet. 1x za release                            |
+| MT-04 | Přílohy a upload (limit 5 MB)                                                             | Binární upload, mimo scope suite                                                                                          |
+| MT-05 | Doručení notifikace pro `reminders_at_due`                                                | Doručení je za hranicí API, nedá se ověřit HTTP odpovědí                                                                  |
+| MT-06 | Zobrazení termínu v aplikaci na zařízení v jiné timezone                                  | Automat ověří jen API odpověď. Jestli appka zobrazí správný lokální den, je UI věc, a právě tam je největší riziko domény |
+| MT-07 | Quick add v aplikaci v češtině                                                            | Ověřeno: API parser je jen anglický. Jestli to appka řeší na klientovi, se přes API zjistit nedá                          |
+| MT-08 | Rotace a revokace API tokenu                                                              | Vyžaduje UI, API tokenem to nejde                                                                                         |
+| MT-09 | Sdílení projektu, pozvánky                                                                | Vyžaduje druhý účet a e-mail, mimo scope                                                                                  |
+| MT-10 | Chování pod zátěží a hranice rate limitu                                                  | Zadání 7.2 performance testy vylučuje                                                                                     |
+| MT-11 | Smazání účtu a exporty dat                                                                | Nevratné                                                                                                                  |
+| MT-12 | Explorativní session nad changelogem nové verze API                                       | Lidský úsudek, plodí návrhy nových katalogových case                                                                      |
 
 MT-03 se částečně překrývá s TC-22. MT-03 je drahá vyčerpávající verze pro release, TC-22 je levná kontrola v suite.
 
@@ -332,16 +336,16 @@ MT-03 se částečně překrývá s TC-22. MT-03 je drahá vyčerpávající ver
 
 ## Co vědomě neautomatizujeme
 
-| Co | Proč |
-|---|---|
-| Nastavení účtu a workspace | Zadání 13.1, schéma API se bude měnit |
-| Placené funkce | Zadání 13.2, Free účet je nevyvolá |
-| Performance a rate limity | Zadání 7.2 |
-| Matice timezone × due_lang | Násobení běhů bez odpovídající hodnoty při tomto scope. Zůstává jeden pevný TZ slot a relativní aserce |
-| Sdílení, spolupráce, druhý uživatel | Scope je jeden uživatel |
-| Generování typů z OpenAPI | Spec nemá `type` u klíčových polí |
-| Kompletní pokrytí 4xx | Zadání 5.4 chce malý subset; katalog má explicitní strop vlny |
-| Vlastní logger a reporting vrstva | Zadání 10.8 a 11: stačí Playwright HTML report. Allure až později, a pak jako reporter, ne zásah do testů |
+| Co                                  | Proč                                                                                                      |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Nastavení účtu a workspace          | Zadání 13.1, schéma API se bude měnit                                                                     |
+| Placené funkce                      | Zadání 13.2, Free účet je nevyvolá                                                                        |
+| Performance a rate limity           | Zadání 7.2                                                                                                |
+| Matice timezone × due_lang          | Násobení běhů bez odpovídající hodnoty při tomto scope. Zůstává jeden pevný TZ slot a relativní aserce    |
+| Sdílení, spolupráce, druhý uživatel | Scope je jeden uživatel                                                                                   |
+| Generování typů z OpenAPI           | Spec nemá `type` u klíčových polí                                                                         |
+| Kompletní pokrytí 4xx               | Zadání 5.4 chce malý subset; katalog má explicitní strop vlny                                             |
+| Vlastní logger a reporting vrstva   | Zadání 10.8 a 11: stačí Playwright HTML report. Allure až později, a pak jako reporter, ne zásah do testů |
 
 ---
 
@@ -356,6 +360,7 @@ Katalog vyžaduje čtyři věci: auth helper, data factory s registrací pro cle
 Obsah: `package.json`, `tsconfig`, eslint + prettier, `.env.example`, README s instalací a spuštěním, `playwright.config.ts`, `config/`, `src/api/client.ts` + `errors.ts`, `ProjectsApi`, `project.schema.ts`, `ResourceTracker`, `fixtures/test.ts`, `global-setup.ts`, `global-teardown.ts`, a TC-01 jako důkaz, že to drží.
 
 **Acceptance criteria (doslova z katalogu):**
+
 - [ ] jeden smoke test projde lokálně přes `npm test`
 - [ ] dvojí spuštění suite za sebou nechá účet ve stejném stavu jako předtím
 - [ ] v repu není žádný credential
@@ -407,6 +412,7 @@ Katalog nabízí zkratku, kdyby byl čas jen na čtyři položky: **UC-E2E, TC-0
 - **`workspace` fixture** vytvoří projekt lazy, až si o něj test řekne. Testy, které projekt nepotřebují (autorizace, 404), ho nevytvoří a nespálí kapacitu.
 
 **Pojmenování** (`src/data/ids.ts` je jediný zdroj pravdy):
+
 - `runId` = `<unix timestamp>-<4 hex>`. Časová složka umožní poznat stáří osiřelého projektu, hex zabrání kolizi dvou běhů ve stejné sekundě.
 - Projekt: `QA <runId> <TC-id>`, prefix `QA ` včetně mezery
 - Task: `[<runId>][<TC-id>] <scenario>`
@@ -424,6 +430,7 @@ projekty běhu = workers × (1 workspace + max 1 extra na test)
 Při 1 workeru je špička 3, pohodlná rezerva. **Při paralelizaci to znamená strop 2 workery na Free plánu.** To je nejdůležitější důsledek: "připravit na paralelizaci" není zadarmo, limit účtu ji stropuje dřív než cokoli v kódu.
 
 Pojistky:
+
 - `globalSetup` spočítá projekty **po orphan sweepu** a když nezbývá kapacita, ukončí běh s hláškou "účet drží N projektů, limit je 5, spusť `npm run account:cleanup`"
 - fixture vrstva hlídá rozpočet běhu a při překročení spadne s vysvětlením, ne s 4xx od API
 
@@ -468,13 +475,13 @@ Repo je veřejné a zadání chce nahrávat traces. Playwright trace obsahuje `A
 
 Naivní `grep -r` ho nenajde:
 
-| Místo | Najde textový grep? |
-|---|---|
-| `test-results/*/trace.zip` → `trace.network`, `trace.trace` | ne, je v zipu |
-| `playwright-report/data/*.zip` (kopie traces) | ne |
-| `playwright-report/index.html` - data vložená jako **base64 zip uvnitř HTML** | ne |
-| `test-results/junit.xml`, vlastní attachmenty | ano |
-| log jobu | GitHub maskuje `secrets.*` automaticky |
+| Místo                                                                         | Najde textový grep?                    |
+| ----------------------------------------------------------------------------- | -------------------------------------- |
+| `test-results/*/trace.zip` → `trace.network`, `trace.trace`                   | ne, je v zipu                          |
+| `playwright-report/data/*.zip` (kopie traces)                                 | ne                                     |
+| `playwright-report/index.html` - data vložená jako **base64 zip uvnitř HTML** | ne                                     |
+| `test-results/junit.xml`, vlastní attachmenty                                 | ano                                    |
+| log jobu                                                                      | GitHub maskuje `secrets.*` automaticky |
 
 Poslední řádek je důležitý: **maskování v logu se nevztahuje na obsah souborů v artefaktech.**
 
@@ -547,6 +554,7 @@ Když někdo za půl roku upgraduje Playwright a ten změní formát reportu, te
 Kroky v pořadí: checkout → setup-node 22 s npm cache → `npm ci` → **preflight kapacity účtu** → run suite → **sanitize** → **verify** → upload HTML report (jen když verify prošel) → upload traces (dtto) → shred artefaktů když verify selhal → cleanup účtu (`if: always()`) → job summary.
 
 Detaily, které nejsou kosmetické:
+
 - `permissions: contents: read` na úrovni workflow. Job, který sahá na token a trace, nikdy nemá vyšší oprávnění.
 - `environment:` scopuje secret, takže ho static job a gate job nevidí ani omylem.
 - **Žádné `npx playwright install`.** API testy běží přes `request` fixture, prohlížeč není potřeba. Ušetří ~40 s a ~300 MB na běh.
@@ -557,12 +565,12 @@ Detaily, které nejsou kosmetické:
 
 Rozbor variant:
 
-| Varianta | Dostane fork token? | Verdikt |
-|---|---|---|
-| `pull_request` + secrets | **Ne**, GitHub secrets se do běhu z forku nikdy nepředávají | použitelné jen s explicitním guardem |
-| `pull_request_target` | **Ano**, plné secrets. Checkout PR head = útočník spustí vlastní kód s tokenem | **nikdy nepoužívat** |
-| `pull_request_target` + required reviewers | ano, po schválení | reviewer schvaluje běh, ne diff řádek po řádku. Stačí `npm ci` postscript, co si sáhne na `$TODOIST_API_TOKEN`. Zamítnuto |
-| **`pull_request` + guard `head.repo.full_name == github.repository`** | ne, job se skipne | **doporučeno** |
+| Varianta                                                              | Dostane fork token?                                                            | Verdikt                                                                                                                   |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `pull_request` + secrets                                              | **Ne**, GitHub secrets se do běhu z forku nikdy nepředávají                    | použitelné jen s explicitním guardem                                                                                      |
+| `pull_request_target`                                                 | **Ano**, plné secrets. Checkout PR head = útočník spustí vlastní kód s tokenem | **nikdy nepoužívat**                                                                                                      |
+| `pull_request_target` + required reviewers                            | ano, po schválení                                                              | reviewer schvaluje běh, ne diff řádek po řádku. Stačí `npm ci` postscript, co si sáhne na `$TODOIST_API_TOKEN`. Zamítnuto |
+| **`pull_request` + guard `head.repo.full_name == github.repository`** | ne, job se skipne                                                              | **doporučeno**                                                                                                            |
 
 ```yaml
 on:
@@ -590,8 +598,8 @@ Static job běží i u forků - fork dostane smysluplnou zpětnou vazbu (typeche
 
 ```yaml
 schedule:
-  - cron: '10 14 * * *'   # 16:10 Praha během CEST (UTC+2)
-  - cron: '10 15 * * *'   # 16:10 Praha během CET  (UTC+1)
+  - cron: '10 14 * * *' # 16:10 Praha během CEST (UTC+2)
+  - cron: '10 15 * * *' # 16:10 Praha během CET  (UTC+1)
 ```
 
 ```bash
@@ -636,6 +644,7 @@ Proč: token dostane jen job s `environment: production`; přepnutí prostředí
 **Jeden token.** Zadání chce jednoho uživatele, takže žádný sekundární token.
 
 Vrstvy ochrany proti úniku do forku, každá sama o sobě dostatečná:
+
 1. GitHub secrets se do běhu z forku nepředávají - platformní záruka, ne naše konfigurace
 2. `pull_request_target` se v repu nepoužívá vůbec; do review checklistu patří "PR, který ho přidává, se nemerguje bez bezpečnostního review"
 3. Explicitní guard na `head.repo.full_name`
@@ -646,11 +655,11 @@ Vrstvy ochrany proti úniku do forku, každá sama o sobě dostatečná:
 
 ### Artefakty
 
-| Artefakt | Kdy | Retention |
-|---|---|---|
-| `playwright-report/` (HTML + traces v `data/`) | vždy, po verifikaci | PR 14 dní, regrese 30, smoke 7 |
-| `test-results/**/trace.zip` | jen při selhání (`retain-on-failure`) | dtto |
-| `junit.xml` | vždy | součást html-report artefaktu |
+| Artefakt                                       | Kdy                                   | Retention                      |
+| ---------------------------------------------- | ------------------------------------- | ------------------------------ |
+| `playwright-report/` (HTML + traces v `data/`) | vždy, po verifikaci                   | PR 14 dní, regrese 30, smoke 7 |
+| `test-results/**/trace.zip`                    | jen při selhání (`retain-on-failure`) | dtto                           |
+| `junit.xml`                                    | vždy                                  | součást html-report artefaktu  |
 
 HTML report už kopie traces obsahuje. Samostatný `traces` artefakt je duplicita, ale malá a užitečná - lze ho přetáhnout přímo do `trace.playwright.dev` bez rozbalování celého reportu. Zadání 9.5 chce obojí explicitně.
 
@@ -672,7 +681,7 @@ Repo settings: squash merge only, **auto-merge vypnutý** (jinak by agent mohl z
 
 ### Jak vynutit, že agent nemerguje
 
-Tohle je jediná část zadání, kterou **nelze splnit konfigurací repa, dokud agent běží pod lidskou identitou.** Agent používá přihlášení `gh` CLI Lucie; z pohledu GitHubu *je* Lucie. Pravidlo 15.3 je dnes **politika, ne kontrola**.
+Tohle je jediná část zadání, kterou **nelze splnit konfigurací repa, dokud agent běží pod lidskou identitou.** Agent používá přihlášení `gh` CLI Lucie; z pohledu GitHubu _je_ Lucie. Pravidlo 15.3 je dnes **politika, ne kontrola**.
 
 **Skutečné řešení, doporučuji jako první issue v repu:** dát agentovi vlastní identitu - fine-grained PAT z odděleného účtu nebo GitHub App s `Contents: rw`, `Issues: rw`, `Pull requests: rw`, `Metadata: read`. Tato identita **není v CODEOWNERS**. Pak merge fyzicky nejde:
 
@@ -691,7 +700,7 @@ Katalog v repu **už obsahuje issue template** (Scope / API documentation / Exam
 - Větev: `test/tc-04-create-task-in-project`, pro ostatní práci `issue-<číslo>-<slug>`
 - Labely: `type/{bug,feature,task,tests,ci,docs}`, `area/{framework,tests,ci}`, `risk/security`, `blocked`, `needs-human-decision`. Zakládá se jednou přes `scripts/setup-labels.sh`
 
-**PR template** musí mít sekce, které zadání 15.4 vyžaduje jako odevzdání: *Related issue*, *Co se změnilo a proč*, *Přehled změn* (tabulka), *Rizika a věci k dořešení*, *Handover* (odkaz na issue, odkaz na PR, kdo schvaluje). Tím, že jsou v šabloně, není odevzdání závislé na tom, jestli si na ně agent vzpomene.
+**PR template** musí mít sekce, které zadání 15.4 vyžaduje jako odevzdání: _Related issue_, _Co se změnilo a proč_, _Přehled změn_ (tabulka), _Rizika a věci k dořešení_, _Handover_ (odkaz na issue, odkaz na PR, kdo schvaluje). Tím, že jsou v šabloně, není odevzdání závislé na tom, jestli si na ně agent vzpomene.
 
 Checklist v PR template: žádný token/e-mail v diffu ani uvnitř vloženého logu; testy po sobě uklízejí; nepřidal jsem `pull_request_target` ani `secrets: inherit`; nové actions pinnuté na SHA; názvy testů obsahují TC ID.
 
@@ -703,7 +712,7 @@ Zadání 4.1 chce "jak nainstalovat a spustit". To musí fungovat od nuly bez pt
 
 1. **Prerekvizity** - Node 22+, npm, Todoist účet vyhrazený pro testování
 2. **Instalace** - clone, `npm ci`, `cp .env.example .env`
-3. **Získání API tokenu** - Settings → Integrations → Developer. 40 hex znaků, **neexpiruje**, nemá scopy, dává plný přístup k účtu. Nikdy necommitovat, nevkládat do issue ani PR. Odkaz na runbook rotace. *Každý účastník si dělá vlastní token na vlastním účtu.*
+3. **Získání API tokenu** - Settings → Integrations → Developer. 40 hex znaků, **neexpiruje**, nemá scopy, dává plný přístup k účtu. Nikdy necommitovat, nevkládat do issue ani PR. Odkaz na runbook rotace. _Každý účastník si dělá vlastní token na vlastním účtu._
 4. **Spuštění** - `npm test`, `npm run test:smoke`, `npx playwright test -g "TC-04"`, `npx playwright show-report`
 5. **Co testy dělají s účtem** - zakládají projekt `QA <runId>`, mažou ho. Free limity. `account:preflight`, `account:cleanup`
 6. **Struktura repozitáře** - odkaz na `docs/architecture.md`
@@ -802,43 +811,35 @@ Po každé fázi musí platit (převzato z acceptance criteria Wave 0 v katalogu
 
 ### Rizika
 
-| Riziko | Dopad | Opatření |
-|---|---|---|
-| Playwright změní formát reportu/trace a sanitizér přestane fungovat tiše | **Kritický** - token na veřejném internetu natrvalo | Blokující verifier + jeho vlastní unit testy; Dependabot PR na Playwright projde static jobem, který ten test spouští |
-| Token v úkrytu trace, na který jsme nepomysleli | **Kritický** | Tvarový regex nezávislý na přesné hodnotě + krátká retention |
-| **Orphan sweep běží na něčím osobním účtu** | **Kritický pro účastníka** - cena chyby je smazaný osobní projekt, ne jen červená pipeline | Maže se výhradně podle prefixu `QA <runId>`; projekt s prefixem, ale nečitelným runId, se nikdy nemaže, jen hlásí; `account-cleanup.ts` má dry-run jako výchozí chování |
-| Suite předpokládá něco o obsahu účtu | Vysoký - náhodně červené testy na zaneřáděném osobním účtu | Vynutit v review: žádná aserce na délku seznamu ani na celkové počty; vždy hledat podle id, nikdy podle pozice; `list*` musí projít celou paginaci; Inbox není prázdný; aserce "nic navíc" se omezují na data tohoto běhu |
-| `max_projects: 5` na účtu, který už není prázdný | Vysoký - lokálně větší riziko než na servisním účtu, účastník může mít pět vlastních projektů | `globalSetup` čte `max_projects` z `user_plan_limits` (nehardcoduje - někdo může mít Pro), porovná po orphan sweepu a skončí s hláškou "účet drží 5 projektů z 5, uvolni jeden" |
-| Různé timezone a jazyky napříč účty účastníků | Střední - posune, co vrátí `due.string` | Timezone účtu se čte v `globalSetup`, loguje do reportu, aserce v TC-11 až TC-13 jsou relativní vůči ní. Hardcodované kalendářní datum je v review důvod k zamítnutí |
-| Sufixy `.N` u rozpadlých TC se rozejdou s katalogem | Nízký, ale zákeřný | Konvence váže sufix na pořadí odrážky v acceptance criteria, takže přeskládání odrážek v katalogu rozbije dohledatelnost. Ohlídat při každé změně katalogu |
-| **UC-E2E je blokovaný externí dodávkou** | Střední - Wave 3 se bez HARu nezačíná | Musí být v plánu vidět jako závislost, ne jako překvapení v den workshopu |
-| Agent běží pod identitou člověka | Vysoký, procesní | Oddělená identita - první issue v repu |
-| Soft-deleted tasky se počítají do `max_tasks: 300` | **Vysoký provozní** - účet se při hodinovém smoke zaplní během dní a suite začne padat naráz | Ověřit ve Wave 0, případně trvalé mazání přes `/sync` |
-| Vyčerpání limitu 5 projektů souběžnými běhy | Vysoký, blokuje všechny běhy | Preflight fail-fast, segmentované concurrency, denní janitor |
-| `cancel-in-progress: true` ruší PR běh před teardownem | Střední | `cleanup-account.yml` maže data starší než 2 h |
-| **GitHub po 60 dnech nečinnosti scheduled workflow automaticky vypne** | Vysoký a zákeřný - neprojeví se červeným během, prostě přestane existovat | Badge v README ukazuje stáří posledního běhu; postup znovuzapnutí v runbooku |
-| Nedokumentované rate limity, 24 smoke + PR běhy na jednom účtu | Střední, nevysvětlitelné flaky | Defenzivní backoff s `Retry-After`, 1 worker, serializovaný scheduled provoz |
-| Flakiness u testů závislých na "dnes" (TC-11, TC-13) | Střední | Všechny aserce relativní (nové datum je později než staré, den v týdnu je pondělí), nikdy absolutní kalendářní datum |
-| Artefakt už byl stažen, než se únik odhalil | Vysoký | Rotace je jediná účinná reakce; mazání artefaktů nic neodvolá - musí to být v runbooku natvrdo |
-| HAR s cookies commitnutý do veřejného repa | Vysoký | `temp/` v `.gitignore`, explicitní řádek v CONTRIBUTING |
+| Riziko                                                                   | Dopad                                                                                         | Opatření                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Playwright změní formát reportu/trace a sanitizér přestane fungovat tiše | **Kritický** - token na veřejném internetu natrvalo                                           | Blokující verifier + jeho vlastní unit testy; Dependabot PR na Playwright projde static jobem, který ten test spouští                                                                                                     |
+| Token v úkrytu trace, na který jsme nepomysleli                          | **Kritický**                                                                                  | Tvarový regex nezávislý na přesné hodnotě + krátká retention                                                                                                                                                              |
+| **Orphan sweep běží na něčím osobním účtu**                              | **Kritický pro účastníka** - cena chyby je smazaný osobní projekt, ne jen červená pipeline    | Maže se výhradně podle prefixu `QA <runId>`; projekt s prefixem, ale nečitelným runId, se nikdy nemaže, jen hlásí; `account-cleanup.ts` má dry-run jako výchozí chování                                                   |
+| Suite předpokládá něco o obsahu účtu                                     | Vysoký - náhodně červené testy na zaneřáděném osobním účtu                                    | Vynutit v review: žádná aserce na délku seznamu ani na celkové počty; vždy hledat podle id, nikdy podle pozice; `list*` musí projít celou paginaci; Inbox není prázdný; aserce "nic navíc" se omezují na data tohoto běhu |
+| `max_projects: 5` na účtu, který už není prázdný                         | Vysoký - lokálně větší riziko než na servisním účtu, účastník může mít pět vlastních projektů | `globalSetup` čte `max_projects` z `user_plan_limits` (nehardcoduje - někdo může mít Pro), porovná po orphan sweepu a skončí s hláškou "účet drží 5 projektů z 5, uvolni jeden"                                           |
+| Různé timezone a jazyky napříč účty účastníků                            | Střední - posune, co vrátí `due.string`                                                       | Timezone účtu se čte v `globalSetup`, loguje do reportu, aserce v TC-11 až TC-13 jsou relativní vůči ní. Hardcodované kalendářní datum je v review důvod k zamítnutí                                                      |
+| Sufixy `.N` u rozpadlých TC se rozejdou s katalogem                      | Nízký, ale zákeřný                                                                            | Konvence váže sufix na pořadí odrážky v acceptance criteria, takže přeskládání odrážek v katalogu rozbije dohledatelnost. Ohlídat při každé změně katalogu                                                                |
+| **UC-E2E je blokovaný externí dodávkou**                                 | Střední - Wave 3 se bez HARu nezačíná                                                         | Musí být v plánu vidět jako závislost, ne jako překvapení v den workshopu                                                                                                                                                 |
+| Agent běží pod identitou člověka                                         | Vysoký, procesní                                                                              | Oddělená identita - první issue v repu                                                                                                                                                                                    |
+| Soft-deleted tasky se počítají do `max_tasks: 300`                       | **Vysoký provozní** - účet se při hodinovém smoke zaplní během dní a suite začne padat naráz  | Ověřit ve Wave 0, případně trvalé mazání přes `/sync`                                                                                                                                                                     |
+| Vyčerpání limitu 5 projektů souběžnými běhy                              | Vysoký, blokuje všechny běhy                                                                  | Preflight fail-fast, segmentované concurrency, denní janitor                                                                                                                                                              |
+| `cancel-in-progress: true` ruší PR běh před teardownem                   | Střední                                                                                       | `cleanup-account.yml` maže data starší než 2 h                                                                                                                                                                            |
+| **GitHub po 60 dnech nečinnosti scheduled workflow automaticky vypne**   | Vysoký a zákeřný - neprojeví se červeným během, prostě přestane existovat                     | Badge v README ukazuje stáří posledního běhu; postup znovuzapnutí v runbooku                                                                                                                                              |
+| Nedokumentované rate limity, 24 smoke + PR běhy na jednom účtu           | Střední, nevysvětlitelné flaky                                                                | Defenzivní backoff s `Retry-After`, 1 worker, serializovaný scheduled provoz                                                                                                                                              |
+| Flakiness u testů závislých na "dnes" (TC-11, TC-13)                     | Střední                                                                                       | Všechny aserce relativní (nové datum je později než staré, den v týdnu je pondělí), nikdy absolutní kalendářní datum                                                                                                      |
+| Artefakt už byl stažen, než se únik odhalil                              | Vysoký                                                                                        | Rotace je jediná účinná reakce; mazání artefaktů nic neodvolá - musí to být v runbooku natvrdo                                                                                                                            |
+| HAR s cookies commitnutý do veřejného repa                               | Vysoký                                                                                        | `temp/` v `.gitignore`, explicitní řádek v CONTRIBUTING                                                                                                                                                                   |
 
 ### Otevřené otázky
 
 **Technické, k zodpovězení ve Wave 0:**
+
 1. Je `DELETE /projects/{id}` hard nebo soft delete? Ovlivňuje TC-03, TC-21 a spolehlivost cleanupu.
 2. Počítají se soft-deleted tasky do `max_tasks: 300`?
 3. Vynechávají `GET /tasks` a `GET /projects` soft-deleted položky samy, nebo musíme filtrovat?
 4. Potvrdit cesty `/sections`, `/comments`, `/labels` proti aktuální dokumentaci, ne odhadovat.
 
-**Procesní, k rozhodnutí před spuštěním CI:**
-5. **Dostane agent vlastní GitHub identitu?** Bez toho je "agent nemerguje" nevynutitelné.
-6. **Je servisní účet pro CI vyhrazený, nebo je to něčí reálný Todoist?** Pokud reálný, dopad případného úniku i dopad testovacích dat je úplně jiný.
-7. **Bude mít CI servisní účet Free, nebo placený plán?** Odpověď rozhoduje o stropu paralelizace.
-8. **Kdy bude k dispozici `temp/todoist-e2e.har`?** Blokuje Wave 3 a Wave 5.
-9. **Opravdu smoke 24x denně?** Na produkčním účtu to je 24 cyklů zakládání a mazání projektu denně navíc k regresi a PR běhům. Alternativa: každou hodinu 7:00-19:00 v pracovní dny, tedy ~65 běhů týdně místo 168. Feedback loop zůstane hodinový tehdy, kdy ho někdo čte.
-10. **Draft PR bez live sady - souhlas?** Šetří kapacitu účtu, ale je to odchylka od doslovného "v každém PR po každém commitu".
-11. **Kdo dostane notifikaci při červené scheduled pipeline?** Dnes nikdo. Minimum: workflow, které při selhání založí nebo aktualizuje issue. Jinak hodinová smoke nikoho neinformuje.
-12. **Kdo schvaluje rozšíření katalogu,** když review ve Wave 5 najde něco, co si zaslouží test? Předpoklad: Lucie nebo Anastasiya, agent si ID nevymýšlí.
-13. **Existuje reálně testovací prostředí Todoistu?** Podle toho se rozhodne, jestli `environments.ts` obsahuje konkrétní URL, nebo jen čte proměnnou.
+**Procesní, k rozhodnutí před spuštěním CI:** 5. **Dostane agent vlastní GitHub identitu?** Bez toho je "agent nemerguje" nevynutitelné. 6. **Je servisní účet pro CI vyhrazený, nebo je to něčí reálný Todoist?** Pokud reálný, dopad případného úniku i dopad testovacích dat je úplně jiný. 7. **Bude mít CI servisní účet Free, nebo placený plán?** Odpověď rozhoduje o stropu paralelizace. 8. **Kdy bude k dispozici `temp/todoist-e2e.har`?** Blokuje Wave 3 a Wave 5. 9. **Opravdu smoke 24x denně?** Na produkčním účtu to je 24 cyklů zakládání a mazání projektu denně navíc k regresi a PR běhům. Alternativa: každou hodinu 7:00-19:00 v pracovní dny, tedy ~65 běhů týdně místo 168. Feedback loop zůstane hodinový tehdy, kdy ho někdo čte. 10. **Draft PR bez live sady - souhlas?** Šetří kapacitu účtu, ale je to odchylka od doslovného "v každém PR po každém commitu". 11. **Kdo dostane notifikaci při červené scheduled pipeline?** Dnes nikdo. Minimum: workflow, které při selhání založí nebo aktualizuje issue. Jinak hodinová smoke nikoho neinformuje. 12. **Kdo schvaluje rozšíření katalogu,** když review ve Wave 5 najde něco, co si zaslouží test? Předpoklad: Lucie nebo Anastasiya, agent si ID nevymýšlí. 13. **Existuje reálně testovací prostředí Todoistu?** Podle toho se rozhodne, jestli `environments.ts` obsahuje konkrétní URL, nebo jen čte proměnnou.
 
 Poznámka k rate limitům: s dvanácti účastníky běžícími suite proti **vlastním** účtům se nedokumentované limity násobí per uživatel, takže workshopový provoz je z tohohle pohledu bezpečnější než jeden sdílený účet. Tlak zůstává jen na servisním účtu v CI.
