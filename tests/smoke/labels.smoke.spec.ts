@@ -7,7 +7,6 @@ test('TC-08 labels: create a label, attach it to a task and read it back', async
   tracker,
   data,
   run,
-  workspace,
 }) => {
   const label = await test.step('Setup: create a label', async () => {
     const created = await labels.create(data.label())
@@ -28,13 +27,12 @@ test('TC-08 labels: create a label, attach it to a task and read it back', async
     )
   })
 
+  // No project: the case is about the label, and a task with no project_id lands in the
+  // Inbox. Creating one would be scenery that nothing here asserts, and it would hold a
+  // slot against the five project limit of the Free plan.
   const task = await test.step('Create a task carrying the label', async () => {
     const created = await tasks.create(
-      data.task({
-        scenario: 'task with a label',
-        project_id: workspace.id,
-        labels: [label.name],
-      })
+      data.task({ scenario: 'task with a label', labels: [label.name] })
     )
     tracker.track('task', created.id)
     return created

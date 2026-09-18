@@ -49,6 +49,28 @@ deleted on its own.
 the same names. No label id appears on a task. Renaming a label would therefore detach
 every task that carried it, which is worth knowing before any test tries to update one.
 
+## 5. An Inbox task is the one leftover a project sweep can never reach
+
+TC-08 and TC-09 create their tasks without a `project_id`, which puts them in the Inbox,
+because neither case is about a project. That trades one limit for another and exposed a
+gap in cleanup worth recording.
+
+| Where a task lives        | What removes it if the run is cancelled                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Inside a `QA ...` project | The project sweep, by cascade. A project delete is hard and takes its tasks with it                                |
+| In the Inbox              | **Nothing, before this change.** The Inbox is explicitly skipped by every project sweep, and a task delete is soft |
+
+Both `globalTeardown` and `scripts/account-cleanup.ts` only ever looked at projects
+carrying the `QA ` prefix, and both skip the Inbox by design so that a personal account is
+never touched. A task left in the Inbox by a cancelled run therefore had no sweeper at
+all. `cancel-in-progress: true` on pull request runs makes that a routine event, not a
+rare one.
+
+**Consequence.** Both now also sweep Inbox tasks whose content starts with `[<runId>]`,
+and `taskRunIdAge()` dates them the same way `runIdAge()` dates a project. The prefix
+remains the only safety catch: a task called `[personal] buy milk` is not datable and is
+never a candidate.
+
 ## Still open
 
 - **What `GET /tasks/{id}` answers for a task whose section was deleted.** Point 3 proves
@@ -57,4 +79,10 @@ every task that carried it, which is worth knowing before any test tries to upda
   read for exactly this, and the attachment did not reach the HTML report artifact, so the
   question survives this run. Worth settling when TC-21 is written, since it decides which
   rule that case asserts.
-- Do soft-deleted tasks count towards `max_tasks: 300`? Still open from Wave 0.
+- **Do soft-deleted tasks count towards `max_tasks: 300`?** Still open from Wave 0, and
+  point 5 raises the stakes: a task deleted inside a project goes with the project as a
+  hard delete, while an Inbox task is only ever soft deleted. If soft-deleted tasks count,
+  the hourly smoke fills the account over days and the suite fails all at once. The API
+  exposes `max_tasks` but no current count, and active listings omit deleted tasks, so
+  measuring it needs a deliberate experiment rather than an assertion. Worth doing before
+  the hourly schedule is switched on, and TC-22 is where it belongs.
