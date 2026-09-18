@@ -67,17 +67,24 @@ skip even on a short day.
 
 ### Wave 3 - chains
 
-| Id     | Name                                    | File                                               | State   |
-| ------ | --------------------------------------- | -------------------------------------------------- | ------- |
-| UC-E2E | the recorded journey                    | `tests/e2e/recorded-journey.e2e.spec.ts`           | blocked |
-| TC-16  | a project from empty to done            | `tests/e2e/project-from-empty-to-done.e2e.spec.ts` | todo    |
-| TC-17  | task lifecycle with comments and labels | `tests/e2e/task-lifecycle.e2e.spec.ts`             | todo    |
-| TC-18  | bulk creation and consistency           | `tests/e2e/bulk-creation.e2e.spec.ts`              | todo    |
+| Id     | Name                                    | File                                               | State |
+| ------ | --------------------------------------- | -------------------------------------------------- | ----- |
+| UC-E2E | the recorded journey                    | `tests/e2e/recorded-journey.e2e.spec.ts`           | done  |
+| TC-16  | a project from empty to done            | `tests/e2e/project-from-empty-to-done.e2e.spec.ts` | todo  |
+| TC-17  | task lifecycle with comments and labels | `tests/e2e/task-lifecycle.e2e.spec.ts`             | todo  |
+| TC-18  | bulk creation and consistency           | `tests/e2e/bulk-creation.e2e.spec.ts`              | todo  |
 
-UC-E2E is **blocked on `temp/todoist-e2e.har` being delivered**, and it is the first item
-of the wave. Its value is in comparing the recording against the public documentation, not
-in making five calls pass. The HAR is never pasted into a conversation: the file is
-pointed at, the list of calls is written into the issue, and only then is a test written.
+UC-E2E is unblocked: the recording was delivered and stays in `temp/`. Its value is in
+comparing the recording against the public documentation, not in making five calls pass.
+The HAR is never pasted into a conversation: the file is pointed at, the list of calls is
+written into the issue, and only then is a test written.
+
+The recording turned out to hold a different journey from the five steps this catalog
+described. It creates neither a project nor a section, and it adds a priority and a
+comment: a task with a due date and a priority, commented on, then completed. The test
+follows the recording, because the recording is what UC-E2E names. The per-command status
+assertion moves to TC-18 with it, since the documented endpoints have no batch envelope
+to trap anybody. See [the findings](findings/uc-e2e-recorded-journey.md).
 
 TC-18 shares TC-E2E's envelope trap: a batch answers 200 while a command inside it failed.
 The resource client returns the per-command statuses and the test asserts each one.
@@ -119,6 +126,7 @@ create new test cases from it on its own.
 - [Wave 0: verified API behaviour](findings/wave-0-api-behaviour.md)
 - [Wave 1: verified task behaviour](findings/wave-1-task-behaviour.md)
 - [Wave 1: verified project behaviour](findings/wave-1-project-behaviour.md)
+- [UC-E2E: the recorded journey versus the documentation](findings/uc-e2e-recorded-journey.md)
 
 ## Candidates beyond the catalog
 
