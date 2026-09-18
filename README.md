@@ -28,6 +28,37 @@ npm ci
 cp .env.example .env
 ```
 
+`npm ci` installs everything the suite needs from `package-lock.json`, which is why it is
+preferred over `npm install`: it gives every participant and the CI runner the same
+versions. Nothing has to be installed globally.
+
+What it brings in:
+
+| Package                                     | Why it is needed                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------- |
+| `@playwright/test`                          | test runner and the `request` fixture used for every API call       |
+| `typescript`, `@types/node`, `tsx`          | the suite is TypeScript; `tsx` runs the scripts in `scripts/`       |
+| `zod`                                       | validates every response body against a schema                      |
+| `dotenv`                                    | reads the token and the base URL from `.env`                        |
+| `cross-env`                                 | sets `TZ` before Node starts, on Windows as well                    |
+| `eslint`, `typescript-eslint`, `@eslint/js` | static checks, run in CI on every pull request                      |
+| `prettier`, `eslint-config-prettier`        | formatting, checked by `npm run format:check`                       |
+| `fflate`                                    | unpacks a `trace.zip` so the sanitizer and the verifier can read it |
+
+`zod` and `dotenv` are runtime dependencies, the rest are dev dependencies.
+
+**No browsers are downloaded.** These are API tests, so `npx playwright install` is not
+part of the setup. The `request` fixture talks HTTP directly and needs no browser binary.
+CI skips the step for the same reason.
+
+Check that the installation worked:
+
+```bash
+node --version                    # 22 or newer
+npx playwright --version
+npm run test:unit                 # needs no token, no network
+```
+
 ## 3. Get an API token
 
 Todoist -> **Settings -> Integrations -> Developer** -> copy the API token.

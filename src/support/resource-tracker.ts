@@ -1,4 +1,5 @@
 import type { ProjectsApi } from '../api/resources/projects.api'
+import type { TasksApi } from '../api/resources/tasks.api'
 
 export type ResourceKind = 'project' | 'task' | 'section' | 'label' | 'comment'
 
@@ -9,6 +10,7 @@ interface TrackedResource {
 
 export interface TrackerDeps {
   projects: ProjectsApi
+  tasks: TasksApi
   /** Filled in as the remaining resource objects arrive in later waves. */
   deleters?: Partial<Record<ResourceKind, (id: string) => Promise<unknown>>>
 }
@@ -51,9 +53,9 @@ export class ResourceTracker {
       try {
         await this.#delete(resource)
       } catch (error) {
-        // Deleting something already gone is a success, not a problem. Todoist uses
-        // soft delete on tasks, so a repeated DELETE most likely answers 2xx rather
-        // than 404 - both outcomes count as "it is not there any more".
+        // Deleting something already gone is a success, not a problem. Both outcomes
+        // are real: a repeated DELETE of a task answers 204 because the delete is soft,
+        // while a task whose project was deleted answers 404 because it went with it.
         if (!isAlreadyGone(error)) {
           this.warnings.push({
             kind: resource.kind,
@@ -77,6 +79,11 @@ export class ResourceTracker {
 
     if (resource.kind === 'project') {
       await this.deps.projects.delete(resource.id)
+      return
+    }
+
+    if (resource.kind === 'task') {
+      await this.deps.tasks.delete(resource.id)
       return
     }
 
