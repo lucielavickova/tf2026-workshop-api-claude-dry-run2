@@ -1,4 +1,4 @@
-import { taskContent } from './ids'
+import { runLabel, taskContent } from './ids'
 import type { CreateTaskInput } from '../api/resources/tasks.api'
 
 export interface TaskFactoryContext {
@@ -15,6 +15,7 @@ export function taskFactory(context: TaskFactoryContext) {
     const { scenario = 'task', ...rest } = overrides
     return {
       content: taskContent(context.runId, context.testId(), scenario),
+      labels: [runLabel(context.runId)],
       ...rest,
     }
   }

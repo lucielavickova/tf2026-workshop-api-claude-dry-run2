@@ -39,6 +39,15 @@ export function taskContent(runId: string, testId: string, scenario: string): st
   return `[${runId}][${testId}] ${scenario}`
 }
 
+/**
+ * The label every task of a run carries, so the whole run is one filter in Todoist.
+ * A label used on a task is not a personal label: it shows up under shared labels
+ * while the task lives and disappears with it, so it needs no cleanup of its own.
+ */
+export function runLabel(runId: string): string {
+  return `${LABEL_PREFIX}${runId}`
+}
+
 export function labelName(runId: string, suffix: string): string {
   return `${LABEL_PREFIX}${runId}-${suffix}`
 }

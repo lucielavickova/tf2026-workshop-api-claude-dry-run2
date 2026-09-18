@@ -11,8 +11,20 @@ export interface ProjectFactoryContext {
  * the scenario is about, so the test reads as a description, not as JSON assembly.
  */
 export function projectFactory(context: ProjectFactoryContext) {
-  return (overrides: Partial<CreateProjectInput> = {}): CreateProjectInput => ({
-    name: projectName(context.runId, context.testTitle()),
-    ...overrides,
-  })
+  return (
+    overrides: Partial<CreateProjectInput> & { scenario?: string } = {}
+  ): CreateProjectInput => {
+    const { scenario, ...rest } = overrides
+
+    // One test may hold more than one project, and the test title alone would name
+    // them identically. The scenario extends the title rather than the format, so
+    // parseProjectName() and every cleanup path keep working unchanged.
+    const title =
+      scenario === undefined ? context.testTitle() : `${context.testTitle()} - ${scenario}`
+
+    return {
+      name: projectName(context.runId, title),
+      ...rest,
+    }
+  }
 }

@@ -129,7 +129,11 @@ parallelism" is not free, and the account limit caps it before anything in the c
   ages and states of clutter.
 - `src/data/ids.ts` is the single source of truth for naming. Every object carries a
   prefix, which does two jobs: isolation between concurrent runs, and a **safety catch
-  for cleanup**, because nothing without a prefix is ever deleted.
+  for cleanup**, because nothing without a prefix is ever deleted. Every task also
+  carries the label `qa-<runId>`, so one filter in the Todoist UI shows a whole run.
+  A test that holds more than one project passes a `scenario`, which extends the test
+  title inside the name rather than changing the format, so `parseProjectName()` and
+  every cleanup path keep working.
 - The `data` factory builds a valid payload with sensible defaults; a test overrides only
   the field its scenario is about, so the test reads as a description of the scenario
   rather than as JSON assembly.
