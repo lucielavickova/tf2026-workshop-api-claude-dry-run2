@@ -7,7 +7,9 @@ import { join } from 'node:path'
  */
 
 const TITLE_PATTERN = /^(TC-\d{2}[a-z]?|UC-E2E)(\.\d+)? .+/
-const TEST_CALL = /^\s*test(?:\.\w+)*\(\s*(['"`])(.+?)\1/gm
+// Only a test() call and its modifiers carry a catalog id. test.describe() groups by
+// resource and test.step() names a phase, so matching .\w+ made both fail the gate.
+const TEST_CALL = /^\s*test(?:\.(?:only|skip|fixme|fail|slow))*\(\s*(['"`])(.+?)\1/gm
 
 /** Filled in wave by wave. A test id outside this set fails the check. */
 const KNOWN_IDS = new Set<string>([

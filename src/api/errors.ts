@@ -48,6 +48,22 @@ export class UnauthorizedError extends ApiError {
   }
 }
 
+/**
+ * 403 means the token is accepted and the operation is not. On this account that is
+ * usually a plan limit or a resource owned by somebody else, so it must not be
+ * reported as a token problem.
+ */
+export class ForbiddenError extends ApiError {
+  constructor(context: ApiErrorContext) {
+    super(context)
+    this.name = 'ForbiddenError'
+    this.message +=
+      '\nThe API accepted the token and refused the operation. Check the plan limits ' +
+      '(Free allows 5 projects, 300 tasks, 20 sections, 500 labels) and whether the ' +
+      'resource belongs to this account.'
+  }
+}
+
 export class NotFoundError extends ApiError {
   constructor(context: ApiErrorContext) {
     super(context)
@@ -74,7 +90,8 @@ export class SchemaError extends Error {
 }
 
 export function toApiError(context: ApiErrorContext): ApiError {
-  if (context.status === 401 || context.status === 403) return new UnauthorizedError(context)
+  if (context.status === 401) return new UnauthorizedError(context)
+  if (context.status === 403) return new ForbiddenError(context)
   if (context.status === 404) return new NotFoundError(context)
   if (context.status === 429) return new RateLimitedError(context)
   return new ApiError(context)

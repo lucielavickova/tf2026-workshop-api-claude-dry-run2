@@ -26,6 +26,11 @@ jobs:
       - id: decide
         # Decides by which cron fired, not by the current hour. A schedule event
         # delayed by tens of minutes therefore changes nothing.
+        env:
+          # The cron line that fired, as GitHub reports it. There is no
+          # GITHUB_EVENT_SCHEDULE variable in the runner environment, and reading one
+          # made the comparison fail every time, so the job never ran on schedule.
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
           if [ '${{ github.event_name }}' != 'schedule' ]; then
             echo 'run=true' >> "$GITHUB_OUTPUT"
@@ -39,10 +44,10 @@ jobs:
             *)     want='' ;;
           esac
 
-          if [ "$GITHUB_EVENT_SCHEDULE" = "$want" ]; then
+          if [ "$EVENT_SCHEDULE" = "$want" ]; then
             echo 'run=true' >> "$GITHUB_OUTPUT"
           else
-            echo "Skipping: offset $offset expects cron '$want', this run is '$GITHUB_EVENT_SCHEDULE'."
+            echo "Skipping: offset $offset expects cron '$want', this run is '$EVENT_SCHEDULE'."
             echo 'run=false' >> "$GITHUB_OUTPUT"
           fi
 

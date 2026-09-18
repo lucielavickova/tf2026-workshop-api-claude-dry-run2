@@ -15,6 +15,9 @@ export function createRunId(): string {
   return `${Math.floor(Date.now() / 1000)}-${randomBytes(2).toString('hex')}`
 }
 
+/** The shape createRunId() produces. Anything else was not made by this suite. */
+export const RUN_ID_PATTERN = /^\d{10,}-[0-9a-f]{4}$/
+
 export function projectName(runId: string, testId: string): string {
   return `${PROJECT_PREFIX}${runId} ${testId}`
 }

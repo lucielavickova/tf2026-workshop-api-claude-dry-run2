@@ -18,7 +18,9 @@ interface Totals {
 }
 
 function attribute(xml: string, name: string): number {
-  const match = xml.match(new RegExp(`<testsuites[^>]*\b${name}="([^"]*)"`))
+  // The boundary is escaped twice on purpose: inside a template literal a single \b
+  // is the backspace character, and the pattern would then never match.
+  const match = xml.match(new RegExp(`<testsuites[^>]*\\b${name}="([^"]*)"`))
   return match === null ? 0 : Number(match[1]) || 0
 }
 

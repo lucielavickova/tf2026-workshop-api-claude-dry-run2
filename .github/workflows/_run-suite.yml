@@ -53,6 +53,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate the run id
+        # Generated before the suite starts, not inside it, so the cleanup step knows
+        # what to remove even when the run is cancelled before its own teardown.
+        run: echo "TEST_RUN_ID=$(date +%s)-$(openssl rand -hex 2)" >> "$GITHUB_ENV"
+
       # No `npx playwright install`: these are API tests, the request fixture needs
       # no browser. Saves about 40 seconds and 300 MB per run.
 
@@ -65,7 +70,10 @@ jobs:
 
       - name: Clean up leftover account data
         if: always()
-        run: npm run account:cleanup -- --force
+        # Scoped to this run, because the script's default age filter is two hours and
+        # an unscoped call could therefore never remove anything the run that has just
+        # finished left behind.
+        run: npm run account:cleanup -- --force --run-id="$TEST_RUN_ID"
 
       - name: Sanitize artifacts
         if: always()

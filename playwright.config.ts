@@ -1,7 +1,9 @@
 import { defineConfig } from '@playwright/test'
-import { resolveBaseUrl } from './config/env'
+import { readWorkers, resolveBaseUrl } from './config/env'
 
-const workers = Number(process.env.TEST_WORKERS ?? 1)
+// TEST_WORKERS is read through readWorkers() and nowhere else. Parsing it a second
+// time here let an empty value through as 0, which Playwright rejects at startup.
+const workers = readWorkers()
 
 export default defineConfig({
   testDir: './tests',

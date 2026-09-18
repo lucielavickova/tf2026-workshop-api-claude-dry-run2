@@ -62,7 +62,7 @@ function readToken(variable: string, required: boolean): string | undefined {
   return raw
 }
 
-function readWorkers(): number {
+export function readWorkers(): number {
   const raw = process.env.TEST_WORKERS
   if (raw === undefined || raw === '') return 1
 

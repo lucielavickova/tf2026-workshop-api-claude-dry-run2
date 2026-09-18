@@ -1,4 +1,5 @@
 import { request as playwrightRequest } from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
 import { loadEnv } from './config/env'
 import { ApiClient } from './src/api/client'
 import { ProjectsApi } from './src/api/resources/projects.api'
@@ -10,11 +11,16 @@ import { PROJECT_PREFIX } from './src/data/ids'
  * and did not manage to remove, typically because the run was cancelled.
  */
 export default async function globalTeardown(): Promise<void> {
-  const env = loadEnv()
-  const { runId } = runContext()
-  const context = await playwrightRequest.newContext()
+  // Everything the teardown needs is resolved inside the try, including the request
+  // context. Resolving it outside meant a missing TEST_RUN_ID reddened a green run
+  // and left the context undisposed.
+  let context: APIRequestContext | undefined
 
   try {
+    const env = loadEnv()
+    const { runId } = runContext()
+    context = await playwrightRequest.newContext()
+
     const projects = new ProjectsApi(
       new ApiClient({
         request: context,
@@ -44,7 +50,7 @@ export default async function globalTeardown(): Promise<void> {
     // Teardown must never turn a green run red - it reports and steps aside.
     console.warn(`Teardown could not complete: ${describe(error)}`)
   } finally {
-    await context.dispose()
+    await context?.dispose()
   }
 }
 
